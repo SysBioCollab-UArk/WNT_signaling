@@ -6,15 +6,17 @@ from pysb.simulator import ScipyOdeSimulator
 Model()
 
 # monomers
-Monomer('Bcat', ['tcf4', 'gsk3b', 'apc', 'state', 'btrcp', 'loc'], {'state': ['x', 'ub'], 'loc' : ['cyt', 'nuc']})  # Bcat
+Monomer('Bcat', ['tcf4', 'gsk3b', 'apc', 'state', 'btrcp', 'loc','axin'], {'state': ['x', 'ub'], 'loc' : ['cyt', 'nuc']})  # Bcat
 Monomer('Gli2', ['btrcp', 'g_pthlh', 'state', 'loc'], {'state': ['x', 'p', 'ub'], 'loc' : ['cyt', 'nuc']})  # Gli2 protein
 Monomer('gGli2', ['tcf4', 'smad3'])  # Gli2 gene
 Monomer('mGli2')  # Gli2 mRNA
 Monomer('Wnt', ['rec'])  # Wnt, rec is receptor complex - lrp5 and fzd
-Monomer('Btrcp', ['b'])  # Btrcp
+Monomer('Btrcp', ['b'])  # Btrcp it binds to the Ub Bcat
 Monomer('Tcf4', ['g_gli2', 'g_pthlh', 'bcat'])  # Tcf4
 Monomer('Smad3', ['g_gli2'])  # Smad3
 Monomer('Gsk3b', ['bcat', 'dvl'])  # represents gsk3, axin, ck1
+#we want to add rules for AXIN and CK1 so me also need monomers
+Monomer('Axin',['bcat'])#
 Monomer('Rec', ['wnt', 'dvl'])  # Receptor
 Monomer('Dvl', ['rec', 'gsk3b'])  # Dvl
 Monomer('gPthlh', ['gli2', 'tcf4'])  # Pthlh gene
@@ -23,24 +25,25 @@ Monomer('Pthrp')  # Pthrp protein
 Monomer('Apc', ['bcat'])   # apc
 Monomer('Dkk1', ['rec'])   # wnt receptor inhibitor
 Monomer('Wif1', ['wnt']) # wnt ligand inhibitor
-
+#Monomer('LiCl',['Gsk3b'])
 # initials
 Parameter('Bcat_0', 50)
 Parameter('Gli2_0', 50)
 Parameter('gGli2_0', 1)
-Parameter('Wnt_0', 500)
+Parameter('Wnt_0', 100)
 Parameter('Btrcp_0', 50)
 Parameter('Tcf4_0', 50)
 Parameter('Smad3_0', 50)
 Parameter('Gsk3b_0', 0)
+Parameter('Axin_0',0)
 Parameter('Rec_0', 50)
 Parameter('Dvl_0', 50)
 Parameter('gPthlh_0', 1)
 Parameter('Apc_0', 0)
 Parameter('Dkk1_0', 0)
 Parameter('Wif1_0', 0)
-
-Initial(Bcat(apc=1,gsk3b=2,btrcp=None,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None), Bcat_0)
+Parameter('')
+Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
 Initial(Gli2(btrcp=None,state='ub',g_pthlh=None,loc='cyt'), Gli2_0)
 Initial(gGli2(tcf4=None,smad3=None), gGli2_0)
 Initial(Wnt(rec=None), Wnt_0)
@@ -48,6 +51,7 @@ Initial(Btrcp(b=None), Btrcp_0)
 Initial(Tcf4(g_gli2=None, g_pthlh=None, bcat=None), Tcf4_0)
 Initial(Smad3(g_gli2=None), Smad3_0)
 Initial(Gsk3b(bcat=None,dvl=None), Gsk3b_0)
+Initial(Axin(bcat=None),Axin_0)
 Initial(Rec(wnt=None,dvl=None), Rec_0)
 Initial(Dvl(rec=None,gsk3b=None), Dvl_0)
 Initial(gPthlh(gli2=None,tcf4=None), gPthlh_0)
@@ -67,7 +71,7 @@ Observable('bcat_nuc', Bcat(loc='nuc'))
 
 # rate constants
 Parameter('k_bcat_ubiq', 0.1)
-Parameter('k_bcat_deg', 0.1)
+Parameter('k_bcat_deg', 0.001)
 k_bcat_dvl = [
      Parameter('kf_bcat_dvl', 10),
      Parameter('kr_bcat_dvl', 1)]
@@ -75,7 +79,7 @@ Parameter('k_bcat_apc', 1)
 Parameter('k_bcat_release', 1)
 Parameter('k_bcat_nuc', 10)
 k_bcat_tcf4 = [
-     Parameter('kf_bcat_tcf4', 10),
+     Parameter('kf_bcat_tcf4', 1),
      Parameter('kr_bcat_tcf4', 1)]
 k_tcf4_gli2 = [
      Parameter('kf_tcf4_gli2', 10),
@@ -112,8 +116,8 @@ k_dvl_rec = [
      Parameter('kf_dvl_rec', 10),
      Parameter('kr_dvl_rec', 1)]
 k_dvl_rec_rigid = [
-     Parameter('kf_dvl_rec_rigid', 0),
-     Parameter('kr_dvl_rec_rigid', 0)]
+     Parameter('kf_dvl_rec_rigid', 100),
+     Parameter('kr_dvl_rec_rigid', 1)]
 k_dkk1_rec = [
      Parameter('kf_dkk1_rec', 1),
      Parameter('kr_dkk1_rec', 1)]
@@ -132,8 +136,10 @@ Rule('Bcat_ubiq', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bca
 Rule('Bcat_degradation', Bcat(gsk3b=None,apc=None,btrcp=1,state='ub') % Btrcp(b=1) >> Btrcp(b=None), k_bcat_deg)
 
 # Beta cantenin in destruction complex binds to DVL at the receptor
-Rule('Bcat_DVL', Bcat(gsk3b=1,apc=2) % Gsk3b(bcat=1,dvl=None) % Apc(bcat=2) + Dvl(gsk3b=None,rec=ANY) | \
-     Bcat(gsk3b=1,apc=2) % Gsk3b(bcat=1,dvl=3) % Apc(bcat=2) % Dvl(gsk3b=3,rec=ANY), *k_bcat_dvl)
+#Adding gsk3b and AXIN and find out what happen with it
+
+Rule('Bcat_DVL', Bcat(gsk3b=1,apc=2,axin=4) % Gsk3b(bcat=1,dvl=None) % Apc(bcat=2) % Axin(bcat=4) + Dvl(gsk3b=None,rec=ANY) | \
+     Bcat(gsk3b=1,apc=2, axin=4) % Gsk3b(bcat=1,dvl=3) % Apc(bcat=2) % Axin(bcat=4) % Dvl(gsk3b=3,rec=ANY), *k_bcat_dvl)
 
 # Release of APC from destruction complex by DVL
 Rule('Bcat_APC', Bcat(gsk3b=1,apc=2) % Gsk3b(bcat=1,dvl=3) % Apc(bcat=2) % Dvl(gsk3b=3,rec=ANY) >> \
@@ -229,5 +235,6 @@ for obs in model.observables:
      plt.legend(loc=0)
      plt.xlabel('Time (arbitrary units)')
      plt.ylabel('Molecule count')
+     plt.ticklabel_format(style='plain')
 
 plt.show()
