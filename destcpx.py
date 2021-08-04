@@ -56,7 +56,7 @@ Parameter('kf_bcat_dtcpx', 1)
 Parameter('kf_bcat_apc', 1)
 Rule('Bcat_binds_dtcpx', Bcat(top=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) >> \
      Bcat(top=1) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY), kf_bcat_dtcpx )
-Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None)+ APC(aa15=None) >> Bcat(top=ANY, bottom=1) % APC(aa15=1), kf_bcat_apc)
+Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None) + APC(aa15=None) >> Bcat(top=ANY, bottom=1) % APC(aa15=1), kf_bcat_apc)
 #Bcat phosphorilated by gsk3 and ck1a
 Parameter('kf_bcat_phos_gsk3', 1)
 Parameter('kr_bcat_u_gsk3', 1)
@@ -64,3 +64,14 @@ Parameter('kf_bcat_phos_ck1a', 1)
 Parameter('kf_bcat_u_ck1a', 1)
 Rule('bcat_p_gsk3', Bcat(nterm='u', top=ANY) | Bcat(nterm='p1', top=ANY), kf_bcat_phos_gsk3, kr_bcat_u_gsk3)
 Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) | Bcat(nterm='p2', top=ANY), kf_bcat_phos_ck1a, kr_bcat_u_ck1a)
+#APC phosphorilated by ck1a
+Parameter('kf_phos_ck1a', 2)
+Parameter('kr_phos_ck1a', 2)
+Rule('apc_p_ck1a', APC(aa20='u') | APC(aa20='p'), kf_phos_ck1a,kr_phos_ck1a)
+#APC binds to bcat
+Parameter('kf_bcat_binds_apc', 1)
+Parameter('kr_bcat_binds_apc', 1)
+Rule('bcat_binds_apc', Bcat(top=1) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY) + APC(aa20=None) | \
+     Bcat(top=1) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) % APC(aa20=1), kf_bcat_binds_apc, kr_bcat_binds_apc)
+
+#testing commit
