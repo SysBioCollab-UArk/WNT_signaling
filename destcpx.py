@@ -69,6 +69,7 @@ Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) >> Bcat(nterm='p1', top=ANY), kf_bc
 Rule('bcat_p_gsk3', Bcat(nterm='p1', top=ANY) >> Bcat(nterm='p2', top=ANY), kf_bcat_phos_gsk3) # then gsk3b phos after
 
 # APC phosphorilated by ck1a
+#should this be reversible or onedirectional?---AF
 Parameter('kf_phos_ck1a', 2)
 Rule('apc_p_ck1a', Apc(state='u', axin=ANY) >> Apc(state='p', axin=ANY), kf_phos_ck1a)
 
