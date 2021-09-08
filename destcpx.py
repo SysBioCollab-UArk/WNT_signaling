@@ -2,6 +2,7 @@ from pysb import *
 import numpy as np
 import matplotlib.pyplot as plt
 from pysb.simulator import ScipyOdeSimulator
+from pysb.bng import generate_equations
 
 Model()
 
@@ -65,49 +66,58 @@ Rule('axin_binds_apc', Axin(apc=None) + Apc(axin=None) >> Axin(apc=1) % Apc(axin
 
 Rule('Bcat_binds_dtcpx', Bcat(top=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) >> \
      Bcat(top=1) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY), kf_bcat_dtcpx )
-Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None) + Apc(aa15=None) >> Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc)
+Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None) % Apc(aa15=None) >> Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc)
 
 # is apc % bcat at aa15 necessary? not sure when it unbinds but has to unbind
 
 
 # Bcat phosphorilated by gsk3 and ck1a
 
-Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) >> Bcat(nterm='p1', top=ANY), kf_bcat_phos_ck1a) # ck1a phos first
-Rule('bcat_p_gsk3', Bcat(nterm='p1', top=ANY) >> Bcat(nterm='p2', top=ANY), kf_bcat_phos_gsk3) # then gsk3b phos after
+# Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) >> Bcat(nterm='p1', top=ANY), kf_bcat_phos_ck1a) # ck1a phos first
+# Rule('bcat_p_gsk3', Bcat(nterm='p1', top=ANY) >> Bcat(nterm='p2', top=ANY), kf_bcat_phos_gsk3) # then gsk3b phos after
 
 # APC phosphorilated by ck1a
 #should this be reversible or onedirectional?---AF
 
-Rule('apc_p_ck1a', Apc(state='u', axin=ANY) >> Apc(state='p', axin=ANY), kf_phos_ck1a)
+# Rule('apc_p_ck1a', Apc(state='u', axin=ANY) >> Apc(state='p', axin=ANY), kf_phos_ck1a)
 
 # phosphoralation forces bcat detach from axin
 
-Rule('bcat_binds_apc', Bcat(top=1, nterm='p2') % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=2) % \
-     Apc(aa20=None, axin=2, state='p') >> Bcat(top=1, nterm='p2') % Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=2) \
-     % Apc(aa20=1, axin=2, state='p'), kf_bcat_binds_apc)
+# Rule('bcat_binds_apc', Bcat(top=1, nterm='p2') % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=2) % \
+#      Apc(aa20=None, axin=2, state='p') >> Bcat(top=1, nterm='p2') % Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=2) \
+#      % Apc(aa20=1, axin=2, state='p'), kf_bcat_binds_apc)
 
 # apc is still bound to axin and bcat and apc are both phos
 
 
 #  Btrcp binds bcat
 
-Rule('btrcp_binds_bcat', Bcat(top=1, nterm='p2', btrcp=None) % Apc(state='p', aa20=1, axin=ANY) + Btrcp(bcat=None) >> \
-     Bcat(top=1, nterm='p2', btrcp=2) % Apc(state='p', aa20=1, axin=ANY) % Btrcp(bcat=2), k_btrcp_binds_bcat)
-
-# should axin=any be included?
-
-
-#  Btrcp ubiquitinates bcat
-
-Rule('Bcat_ubiq', Bcat(btrcp=1, state='x', top=ANY) % Btrcp(bcat=1) >> \
-     Bcat(btrcp=1, state='ub', top=ANY) % Btrcp(bcat=1), k_bcat_ubiq)
-
-# Apc release bcat by dephos
-
-Rule('apc_release_bcat', Apc(state='p', aa20=1, axin=ANY) % Bcat(top=1, state='ub', btrcp=ANY) >> \
-     Apc(state='u', aa20=None, axin=ANY) + Bcat(top=None, state='ub', btrcp=ANY), k_bcat_release)
+# Rule('btrcp_binds_bcat', Bcat(top=1, nterm='p2', btrcp=None) % Apc(state='p', aa20=1, axin=ANY) + Btrcp(bcat=None) >> \
+#      Bcat(top=1, nterm='p2', btrcp=2) % Apc(state='p', aa20=1, axin=ANY) % Btrcp(bcat=2), k_btrcp_binds_bcat)
+#
+# # should axin=any be included?
+#
+#
+# #  Btrcp ubiquitinates bcat
+#
+# Rule('Bcat_ubiq', Bcat(btrcp=1, state='x', top=ANY) % Btrcp(bcat=1) >> \
+#      Bcat(btrcp=1, state='ub', top=ANY) % Btrcp(bcat=1), k_bcat_ubiq)
+#
+# # Apc release bcat by dephos
+#
+# Rule('apc_release_bcat', Apc(state='p', aa20=1, axin=ANY) % Bcat(top=1, state='ub', btrcp=ANY) >> \
+#      Apc(state='u', aa20=None, axin=ANY) + Bcat(top=None, state='ub', btrcp=ANY), k_bcat_release)
 
 #running simulations
-tspan = np.linspace(0, 1, 101)
-sim = ScipyOdeSimulator(model, tspan, verbose=True)
-
+# tspan = np.linspace(0, 1, 101)
+# sim = ScipyOdeSimulator(model, tspan, verbose=True)
+print(model.monomers)
+print()
+print(model.rules)
+print()
+generate_equations(model,verbose=True)
+for i,sp in enumerate(model.species):
+     print(i,sp)
+print()
+for i,rxn in enumerate(model.reactions):
+     print(i,rxn)
