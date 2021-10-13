@@ -30,21 +30,28 @@ Initial(Bcat(top=None, bottom=None, nterm='u', btrcp=None, state='x'), Bcat_0)
 Initial(Btrcp(bcat=None), Btrcp_0)
 
 #observables
-Observable('Axin_tot', Axin())   # total amount of axin
-Observable('Gsk3_tot', Gsk3())   # total amount of gsk3
-Observable('Ck1a_tot', Ck1a())   # total amount of ck1a
-Observable('Apc_aa20u', Apc(state='u'))
-Observable('Apc_aa20p', Apc(state='p'))
-Observable('Bcat_u', Bcat(nterm='u'))
-Observable('Bcat_p1', Bcat(nterm='p1'))
-Observable('Bcat_p2', Bcat(nterm='p2'))
-Observable('Bcat_ub', Bcat(state='ub'))
-Observable('Btrcp_tot', Btrcp())
+# Observable('Axin_tot', Axin())   # total amount of axin
+# Observable('Gsk3_tot', Gsk3())   # total amount of gsk3
+# Observable('Ck1a_tot', Ck1a())   # total amount of ck1a
+# Observable('Apc_aa20u', Apc(state='u'))
+# Observable('Apc_aa20p', Apc(state='p'))
+# Observable('Bcat_u', Bcat(nterm='u'))
+# Observable('Bcat_p1', Bcat(nterm='p1'))
+# Observable('Bcat_p2', Bcat(nterm='p2'))
+# Observable('Bcat_ub', Bcat(state='ub'))
+# Observable('Btrcp_tot', Btrcp())
+Observable('apc_axin', Axin(apc=ANY))
+Observable('ck1a_axin', Axin(ck1a=ANY))
+Observable('gsk3_axin', Axin(gsk3=ANY))
+Observable('axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
 
 # Rate constants
 Parameter('kf_axin_ck1a',1)
+Parameter('kr_axin_ck1a',10)
 Parameter('kf_axin_gsk3',1)
+Parameter('kr_axin_gsk3',100)
 Parameter('kf_axin_apc',1)
+Parameter('kr_axin_apc',10)
 Parameter('kf_bcat_dtcpx', 1)
 Parameter('kf_bcat_apc', 1)
 Parameter('kf_bcat_phos_gsk3', 1)
@@ -61,10 +68,10 @@ Parameter('k_bcat_release', 2)
 
 # Axin binding rules
 
-Rule('axin_binds_ck1a', Axin(ck1a=None) + Ck1a(axin=None) >> Axin(ck1a=1) % Ck1a(axin=1), kf_axin_ck1a)
-Rule('axin_binds_gsk3', Axin(gsk3=None) + Gsk3(axin=None) >> Axin(gsk3=1) % Gsk3(axin=1), kf_axin_gsk3)
-Rule('axin_binds_apc', Axin(apc=None) + Apc(axin=None) >> Axin(apc=1) % Apc(axin=1), kf_axin_apc)
-
+Rule('axin_binds_ck1a', Axin(ck1a=None) + Ck1a(axin=None) | Axin(ck1a=1) % Ck1a(axin=1), kf_axin_ck1a, kr_axin_ck1a)
+Rule('axin_binds_gsk3', Axin(gsk3=None) + Gsk3(axin=None) | Axin(gsk3=1) % Gsk3(axin=1), kf_axin_gsk3, kr_axin_gsk3)
+Rule('axin_binds_apc', Axin(apc=None) + Apc(axin=None) | Axin(apc=1) % Apc(axin=1), kf_axin_apc, kr_axin_apc)
+'''
 # Bcat into dest comp
 
 Rule('Bcat_binds_dtcpx', Bcat(top=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) >> \
@@ -72,9 +79,9 @@ Rule('Bcat_binds_dtcpx', Bcat(top=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, ap
 Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None) % Apc(aa15=None) >> Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc)
 
 # is apc % bcat at aa15 necessary? not sure when it unbinds but has to unbind
-#It aslso binds to the aa20 but when it is phosphorilated .According to the paper
-#As discussed below, we have suggested that the reason APC contains two different types of b-catenin binding motifs is because they may function differently within the destruction
-#complex.
+# It aslso binds to the aa20 but when it is phosphorilated .According to the paper
+# As discussed below, we have suggested that the reason APC contains two different types of b-catenin binding motifs is because they may function differently within the destruction
+# complex.
 
 # Bcat phosphorilated by gsk3 and ck1a
 
@@ -83,7 +90,7 @@ Rule('bcat_p_gsk3', Bcat(nterm='p1', top=ANY) | Bcat(nterm='p2', top=ANY), kf_bc
 # According to a paper in the absence of WNT signals the destruction is activated and a balanced between unphos and phos B-catenin
 
 # APC phosphorilated by ck1a
-#should this be reversible or onedirectional?---AF
+# should this be reversible or onedirectional?---AF
 
 Rule('apc_p_ck1a', Apc(state='u', axin=ANY) | Apc(state='p', axin=ANY), kf_apc_phos_ck1a, kr_apc_phos_ck1a)
 
@@ -113,17 +120,26 @@ Rule('btrcp_binds_bcat', Bcat(top=1, nterm='p2', btrcp=None) % Apc(state='p', aa
 #
 # Rule('apc_release_bcat', Apc(state='p', aa20=1, axin=ANY) % Bcat(top=1, state='ub', btrcp=ANY) >> \
 #      Apc(state='u', aa20=None, axin=ANY) + Bcat(top=None, state='ub', btrcp=ANY), k_bcat_release)
-
+'''
 #running simulations
-# tspan = np.linspace(0, 1, 101)
-# sim = ScipyOdeSimulator(model, tspan, verbose=True)
-print(model.monomers)
-print()
-print(model.rules)
-print()
-generate_equations(model,verbose=True)
-for i,sp in enumerate(model.species):
-     print(i,sp)
-print()
-for i,rxn in enumerate(model.reactions):
-     print(i,rxn)
+tspan = np.linspace(0, 0.1, 101)
+sim = ScipyOdeSimulator(model, tspan, verbose=True)
+result = sim.run()
+for obs in model.observables:
+     plt.plot(tspan, result.observables[obs.name], lw=2, label=obs.name)
+plt.legend(loc=0)
+plt.xlabel('time')
+plt.ylabel('concentration')
+
+plt.show()
+
+# print(model.monomers)
+# print()
+# print(model.rules)
+# print()
+# generate_equations(model,verbose=True)
+# for i,sp in enumerate(model.species):
+#      print(i,sp)
+# print()
+# for i,rxn in enumerate(model.reactions):
+#      print(i,rxn)
