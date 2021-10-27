@@ -15,7 +15,7 @@ Monomer('Bcat', ['top', 'bottom', 'nterm', 'btrcp', 'state'], {'state': ['x', 'u
 Monomer('Btrcp', ['bcat'])
 
 # Initials
-Parameter('Axin_0', 10)
+Parameter('Axin_0', 100)
 Parameter('Gsk3_0', 50)
 Parameter('Ck1a_0', 50)
 Parameter('Apc_0', 50)
@@ -44,6 +44,9 @@ Observable('apc_axin', Axin(apc=ANY))
 Observable('ck1a_axin', Axin(ck1a=ANY))
 Observable('gsk3_axin', Axin(gsk3=ANY))
 Observable('axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
+Observable('bcat_free', Bcat(top=None, bottom=None))
+Observable('bcat_axin', Bcat(top=ANY, bottom=None))
+Observable('bcat_axin_apc', Bcat(top=ANY, bottom=ANY))
 
 # Rate constants
 Parameter('kf_axin_ck1a',1)
@@ -52,8 +55,10 @@ Parameter('kf_axin_gsk3',1)
 Parameter('kr_axin_gsk3',100)
 Parameter('kf_axin_apc',1)
 Parameter('kr_axin_apc',10)
-Parameter('kf_bcat_dtcpx', 1)
-Parameter('kf_bcat_apc', 1)
+Parameter('kf_bcat_dtcpx', 100)
+Parameter('kr_bcat_dtcpx', 0.1)
+Parameter('kf_bcat_apc', 100)
+Parameter('kr_bcat_apc', 0.1)
 Parameter('kf_bcat_phos_gsk3', 1)
 Parameter('kr_bcat_phos_gsk3', 1)
 Parameter('kf_bcat_phos_ck1a', 1)
@@ -71,18 +76,18 @@ Parameter('k_bcat_release', 2)
 Rule('axin_binds_ck1a', Axin(ck1a=None) + Ck1a(axin=None) | Axin(ck1a=1) % Ck1a(axin=1), kf_axin_ck1a, kr_axin_ck1a)
 Rule('axin_binds_gsk3', Axin(gsk3=None) + Gsk3(axin=None) | Axin(gsk3=1) % Gsk3(axin=1), kf_axin_gsk3, kr_axin_gsk3)
 Rule('axin_binds_apc', Axin(apc=None) + Apc(axin=None) | Axin(apc=1) % Apc(axin=1), kf_axin_apc, kr_axin_apc)
-'''
+
 # Bcat into dest comp
 
-Rule('Bcat_binds_dtcpx', Bcat(top=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) >> \
-     Bcat(top=1) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY), kf_bcat_dtcpx )
-Rule('Bcat_binds_aa15', Bcat(top=ANY,bottom=None) % Apc(aa15=None) >> Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc)
+Rule('Bcat_binds_dtcpx', Bcat(top=None,bottom=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) | \
+     Bcat(top=1, bottom=None) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY),  kf_bcat_dtcpx, kr_bcat_dtcpx)
+Rule('Bcat_binds_aa15', Bcat(top=ANY, bottom=None) % Apc(aa15=None) | Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc, kr_bcat_apc)
 
 # is apc % bcat at aa15 necessary? not sure when it unbinds but has to unbind
 # It aslso binds to the aa20 but when it is phosphorilated .According to the paper
 # As discussed below, we have suggested that the reason APC contains two different types of b-catenin binding motifs is because they may function differently within the destruction
 # complex.
-
+'''
 # Bcat phosphorilated by gsk3 and ck1a
 
 Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) | Bcat(nterm='p1', top=ANY), kf_bcat_phos_ck1a, kr_bcat_phos_ck1a) # ck1a phos first
@@ -126,6 +131,9 @@ tspan = np.linspace(0, 0.1, 101)
 sim = ScipyOdeSimulator(model, tspan, verbose=True)
 result = sim.run()
 for obs in model.observables:
+     if obs.name == 'bcat_free':
+          plt.legend(loc=0)
+          plt.figure()
      plt.plot(tspan, result.observables[obs.name], lw=2, label=obs.name)
 plt.legend(loc=0)
 plt.xlabel('time')
