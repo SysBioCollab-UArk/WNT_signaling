@@ -10,7 +10,7 @@ Model()
 Monomer('Axin', ['bcat', 'gsk3', 'ck1a', 'apc'])
 Monomer('Gsk3', ['axin'])
 Monomer('Ck1a', ['axin'])
-Monomer('Apc', ['axin', 'aa15', 'aa20', 'state'], {'state': ['u', 'p']})
+Monomer('Apc', ['axin', 'aa15', 'aa20', 'state'], {'state': ['u', 'p1', 'p2']})
 Monomer('Bcat', ['top', 'bottom', 'nterm', 'btrcp', 'state'], {'state': ['x', 'ub'], 'nterm' : ['u', 'p1', 'p2']}) # p1 by ck1a, p2 by gsk3
 Monomer('Btrcp', ['bcat'])
 
@@ -60,15 +60,18 @@ Parameter('kr_bcat_dtcpx', 0.1)
 Parameter('kf_bcat_apc', 100)
 Parameter('kr_bcat_apc', 0.1)
 Parameter('kf_bcat_phos_gsk3', 1)
-Parameter('kr_bcat_phos_gsk3', 1)
+# Parameter('kr_bcat_phos_gsk3', 1)
 Parameter('kf_bcat_phos_ck1a', 1)
-Parameter('kr_bcat_phos_ck1a', 1)
+# Parameter('kr_bcat_phos_ck1a', 1)
 Parameter('kf_apc_phos_ck1a', 2)
-Parameter('kr_apc_phos_ck1a', 2)
+# Parameter('kr_apc_phos_ck1a', 2)
+Parameter('kf_apc_phos_gsk3', 2)
+Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 1)
 Parameter('k_btrcp_binds_bcat', 1)
 Parameter('k_bcat_ubiq', 1)
 Parameter('k_bcat_release', 2)
+
 # Rules
 
 # Axin binding rules
@@ -81,32 +84,41 @@ Rule('axin_binds_apc', Axin(apc=None) + Apc(axin=None) | Axin(apc=1) % Apc(axin=
 
 Rule('Bcat_binds_dtcpx', Bcat(top=None,bottom=None) + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY) | \
      Bcat(top=1, bottom=None) % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=ANY),  kf_bcat_dtcpx, kr_bcat_dtcpx)
+
 Rule('Bcat_binds_aa15', Bcat(top=ANY, bottom=None) % Apc(aa15=None) | Bcat(top=ANY, bottom=1) % Apc(aa15=1), kf_bcat_apc, kr_bcat_apc)
+Rule('bcat_p_ck1a', Bcat(top=ANY, nterm='u') >> Bcat(top=ANY, nterm='p1'), kf_bcat_phos_ck1a) # ck1a phos first
+Rule('bcat_unp1', Bcat(nterm='p1') >> Bcat(nterm='u'), k_dephos)
+Rule('bcat_p_gsk3', Bcat(top=ANY, nterm='p1') >> Bcat(top=ANY, nterm='p2'), kf_bcat_phos_gsk3) # then gsk3b phos after
+Rule('bcat_unp2', Bcat(nterm='p2') >> Bcat(nterm='p1'), k_dephos)
+
 
 # is apc % bcat at aa15 necessary? not sure when it unbinds but has to unbind
 # It aslso binds to the aa20 but when it is phosphorilated .According to the paper
 # As discussed below, we have suggested that the reason APC contains two different types of b-catenin binding motifs is because they may function differently within the destruction
 # complex.
-'''
+
 # Bcat phosphorilated by gsk3 and ck1a
 
-Rule('bcat_p_ck1a', Bcat(nterm='u', top=ANY) | Bcat(nterm='p1', top=ANY), kf_bcat_phos_ck1a, kr_bcat_phos_ck1a) # ck1a phos first
-Rule('bcat_p_gsk3', Bcat(nterm='p1', top=ANY) | Bcat(nterm='p2', top=ANY), kf_bcat_phos_gsk3, kr_bcat_phos_gsk3) # then gsk3b phos after
 # According to a paper in the absence of WNT signals the destruction is activated and a balanced between unphos and phos B-catenin
 
 # APC phosphorilated by ck1a
 # should this be reversible or onedirectional?---AF
 
-Rule('apc_p_ck1a', Apc(state='u', axin=ANY) | Apc(state='p', axin=ANY), kf_apc_phos_ck1a, kr_apc_phos_ck1a)
+Rule('apc_p_ck1a', Apc(state='u', axin=ANY) % Ck1a() % Gsk3() % Bcat(nterm='p2') >> Apc(state='p1', axin=ANY) % Ck1a() % \
+     Gsk3() % Bcat(nterm='p2'), kf_apc_phos_ck1a)
+Rule('apc_unp1', Apc(state='p1') >> Apc(state='u'), k_dephos)
+Rule('apc_p_gsk3', Apc(state='p1', axin=ANY) % Ck1a() % Gsk3() % Bcat(nterm='p2') >> Apc(state='p2', axin=ANY) % Ck1a() % \
+     Gsk3() % Bcat(nterm='p2'), kf_apc_phos_gsk3)
+Rule('apc_unp2', Apc(state='p2') >> Apc(state='p1'), k_dephos)
 
 # phosphoralation forces bcat detach from axin
 
-Rule('bcat_binds_apc', Bcat(top=1, nterm='p2') % Axin(bcat=1, ck1a=ANY, gsk3=ANY, apc=2) % \
-      Apc(aa20=None, axin=2, state='p') >> Bcat(top=1, nterm='p2') % Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=2) \
-      % Apc(aa20=1, axin=2, state='p'), kf_bcat_binds_apc)
+Rule('bcat_binds_apc', Bcat(top=1, nterm='p2', bottom=3) % Axin(bcat=1) % Ck1a() % Gsk3() % \
+      Apc(aa20=None, state='p2', aa15=3) >> Bcat(top=2, nterm='p2', bottom=None) % Axin(bcat=None) % Ck1a() % Gsk3() \
+      % Apc(aa20=2, state='p2', aa15=None), kf_bcat_binds_apc)
 
 # apc is still bound to axin and bcat and apc are both phos
-
+'''
 
 #  Btrcp binds bcat
 
