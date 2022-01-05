@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from pysb.simulator import ScipyOdeSimulator
 from pysb.bng import generate_equations
 
+# model based on van Kappel and Maurice 2017 (https://dx.doi.org/10.1111/bph.13922)
+
 Model()
 
 # monomer
@@ -57,8 +59,11 @@ Observable('bcat_apc_aa15', Apc(aa15=ANY, aa20=None))
 Observable('bcat_apc_aa20', Apc(aa15=None, aa20=ANY))
 Observable('bcat_apc_both', Apc(aa15=ANY, aa20=ANY))
 Observable('bcat_ub_apc', Bcat(top=1, bottom=None, state='ub') % Apc(aa20=1))
-Observable('bcat_ub_btrcp', Bcat(state='ub') % Btrcp())
+Observable('bcat_ub_apc_btrcp', Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1) % Btrcp(bcat=2))
+Observable('bcat_ub_btrcp', Bcat(top=None, bottom=1, state='ub') % Btrcp(bcat=1))
+Observable('bcat_ub_btrcp_total', Bcat(bottom=1, state='ub') % Btrcp(bcat=1))
 Observable('bcat_ub_total', Bcat(state='ub'))
+
 
 OBS = [
     ['ck1a_axin', 'gsk3_axin', 'apc_axin'],
@@ -66,7 +71,8 @@ OBS = [
     ['bcat_p1', 'bcat_p2'],
     ['apc_p1', 'apc_p2'],
     ['bcat_apc_aa15', 'bcat_apc_aa20', 'bcat_apc_both'],
-    ['bcat_ub_apc', 'bcat_ub_btrcp', 'bcat_ub_total']
+    ['bcat_ub_apc', 'bcat_ub_apc_btrcp', 'bcat_ub_btrcp',
+     'bcat_ub_btrcp_total', 'bcat_ub_total']
 ]
 
 # Rate constants
@@ -89,10 +95,12 @@ Parameter('kf_apc_phos_ck1a', 20)
 Parameter('kf_apc_phos_gsk3', 200)
 Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 100)
-Parameter('k_btrcp_binds_bcat', 1)
+Parameter('kf_btrcp_binds_bcat', 0.01)
+Parameter('kr_btrcp_binds_bcat', 1)
 Parameter('k_bcat_ubiq', 1)
-Parameter('k_bcat_release', 0.1)
-Parameter('k_bcat_deg', 1)
+Parameter('k_bcat_release', 1)
+Parameter('k_bcat_deg', 0.1)
+
 
 # Rules
 
@@ -141,8 +149,6 @@ Rule('apc_p_gsk3', Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='p1', axin=ANY
 
 Rule('apc_unp2', Apc(state='p2', aa20=None) >> Apc(state='p1', aa20=None), k_dephos)
 
-##### ASHLEY AND I HAVE CONFIRMED RULES UP TO THIS POINT. WILL DO THE REST NEXT TIME --LAH #####
-
 # phosphorylation forces bcat detach from axin
 
 Rule('bcat_binds_apc', Bcat(top=1, nterm='p2', bottom=3) % Axin(bcat=1) % Ck1a() % Gsk3() %
@@ -152,11 +158,11 @@ Rule('bcat_binds_apc', Bcat(top=1, nterm='p2', bottom=3) % Axin(bcat=1) % Ck1a()
 # apc is still bound to axin and bcat and apc are both phos
 
 #  Btrcp binds bcat
-
+# we are assuming that btrcp can bind (and unbind) to bcat whether it is ubiquitinated or not
 Rule('btrcp_binds_bcat',
-     Bcat(top=1, nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) >>
+     Bcat(top=1, nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
      Bcat(top=1, nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
-     k_btrcp_binds_bcat)
+     kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
 
 # should axin=any be included?
 
@@ -173,9 +179,6 @@ Rule('apc_release_bcat',
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 
-# dephosphorylation of APC after Bcat release (implicitly assumed to be due to PP2A)
-Rule('apc_dephos_p2_p1', Apc(state='p2', aa20=None) >> Apc(state='p1', aa20=None), k_dephos)
-Rule('apc_dephos_p1_u', Apc(state='p1', aa20=None) >> Apc(state='u', aa20=None), k_dephos)
 
 #running simulations
 tspan = np.linspace(0, 1, 101)
