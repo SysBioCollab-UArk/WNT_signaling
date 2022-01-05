@@ -5,6 +5,7 @@ from pysb.simulator import ScipyOdeSimulator
 from pysb.bng import generate_equations
 
 # model based on van Kappel and Maurice 2017 (https://dx.doi.org/10.1111/bph.13922)
+# rule verification was completed by LH and GB on 1/5/22
 
 Model()
 
