@@ -108,19 +108,56 @@ Parameter('k_bcat_deg', 0.1)
 # Axin binding rules
 # We require beta-catenin to NOT be bound for these binding event to occur
 # We assume beta-catenin can only bind when all three of Ck1a, Gsk3, and Apc are bound
-Rule('axin_binds_ck1a', Axin(bcat=None, ck1a=None) + Ck1a(axin=None) | Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
-     kf_axin_ck1a, kr_axin_ck1a)
-Rule('axin_binds_gsk3', Axin(bcat=None, gsk3=None) + Gsk3(axin=None) | Axin(bcat=None, gsk3=1) % Gsk3(axin=1),
-     kf_axin_gsk3, kr_axin_gsk3)
-Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None) | Axin(bcat=None, apc=1) % Apc(axin=1),
-     kf_axin_apc, kr_axin_apc)
+Rule('axin_binds_ck1a', Axin(bcat=None, ck1a=None) + Ck1a(axin=None) >> Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
+     kf_axin_ck1a)
+Rule('axin_binds_gsk3', Axin(bcat=None, gsk3=None) + Gsk3(axin=None) >> Axin(bcat=None, gsk3=1) % Gsk3(axin=1),
+     kf_axin_gsk3)
+Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None) >> Axin(bcat=None, apc=1) % Apc(axin=1),
+     kf_axin_apc)
+
+# Axin unbinding rules
+# We only allow Ck1a, Gsk3, and Apc to unbind if at least one of the others is not bound. If all three are
+# bound we assume the complex never breaks apart
+
+# Ck1a unbinds
+Rule('axin_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=None, apc=None) % Ck1a(axin=1) >>
+     Axin(bcat=None, ck1a=None, gsk3=None, apc=None) + Ck1a(axin=None), kr_axin_ck1a)
+
+Rule('axin_gsk3_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=ANY, apc=None) % Ck1a(axin=1) >>
+     Axin(bcat=None, ck1a=None, gsk3=ANY, apc=None) + Ck1a(axin=None), kr_axin_ck1a)
+
+Rule('axin_apc_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=None, apc=ANY) % Ck1a(axin=1) >>
+     Axin(bcat=None, ck1a=None, gsk3=None, apc=ANY) + Ck1a(axin=None), kr_axin_ck1a)
+
+# Gsk3 unbinds
+Rule('axin_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=None, apc=None) % Gsk3(axin=1) >>
+     Axin(bcat=None, gsk3=None, ck1a=None, apc=None) + Gsk3(axin=None), kr_axin_gsk3)
+
+Rule('axin_ck1a_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=ANY, apc=None) % Gsk3(axin=1) >>
+     Axin(bcat=None, gsk3=None, ck1a=ANY, apc=None) + Gsk3(axin=None), kr_axin_gsk3)
+
+Rule('axin_apc_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=None, apc=ANY) % Gsk3(axin=1) >>
+     Axin(bcat=None, gsk3=None, ck1a=None, apc=ANY) + Gsk3(axin=None), kr_axin_gsk3)
+
+# APC unbinds
+Rule('axin_unbinds_apc', Axin(bcat=None, apc=1, gsk3=None, ck1a=None) % Apc(axin=1) >>
+     Axin(bcat=None, apc=None, gsk3=None, ck1a=None) + Apc(axin=None), kr_axin_apc)
+
+Rule('axin_gsk3_unbinds_apc', Axin(bcat=None, apc=1, gsk3=ANY, ck1a=None) % Apc(axin=1) >>
+     Axin(bcat=None, apc=None, gsk3=ANY, ck1a=None) + Apc(axin=None), kr_axin_apc)
+
+Rule('axin_ck1a_unbinds_apc', Axin(bcat=None, apc=1, gsk3=None, ck1a=ANY) % Apc(axin=1) >>
+     Axin(bcat=None, apc=None, gsk3=None, ck1a=ANY) + Apc(axin=None), kr_axin_apc)
 
 # Bcat into dest comp
 # Here, we are requiring that the aa20 site of APC is NOT bound to another beta-catenin molecule in order for
 # beta-catenin to bind to Axin
+# NOTE: we are only allowing Bcat to bind to Axin if APC is unphosphorylated (this completes the loop and allows
+# the destruction complex to be recycled)
 Rule('Bcat_binds_dtcpx',
-     Bcat(top=None, bottom=None, nterm='u') + Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None) |
-     Bcat(top=2, bottom=None, nterm='u') % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None),
+     Bcat(top=None, bottom=None, nterm='u') +
+     Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, state='u') |
+     Bcat(top=2, bottom=None, nterm='u') % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, state='u'),
      kf_bcat_dtcpx, kr_bcat_dtcpx)
 
 # We think Bcat can be phosphorylated and dephosphorylated when bound to Axin, whether it's bound to APC or not
