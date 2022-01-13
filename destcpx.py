@@ -7,6 +7,9 @@ from pysb.bng import generate_equations
 # model based on van Kappel and Maurice 2017 (https://dx.doi.org/10.1111/bph.13922)
 # rule verification was completed by LH and GB on 1/5/22
 
+# 6 monomers + 30 rules (including the reverse directions)
+# expands into 32 species + 63 reactions
+
 Model()
 
 # monomer
@@ -216,7 +219,6 @@ Rule('apc_release_bcat',
 
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
-
 
 #running simulations
 tspan = np.linspace(0, 1, 101)
