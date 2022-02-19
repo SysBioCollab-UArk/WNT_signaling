@@ -10,15 +10,18 @@ from pysb.bng import generate_equations
 # 6 monomers + 30 rules (including the reverse directions)
 # expands into 32 species + 63 reactions
 
+# TODO: Modify rate constants so that more Bcat is degraded (very little is being degraded right now, 02/18/22)
+
 Model()
 
 # monomer
 Monomer('Axin', ['bcat', 'gsk3', 'ck1a', 'apc'])
-Monomer('Gsk3', ['axin'])
+Monomer('Gsk3', ['axin', 'lithium'])
 Monomer('Ck1a', ['axin'])
 Monomer('Apc', ['axin', 'aa15', 'aa20', 'state'], {'state': ['u', 'p1', 'p2']})
 Monomer('Bcat', ['top', 'bottom', 'nterm', 'state'], {'state': ['x', 'ub'], 'nterm': ['u', 'p1', 'p2']}) # p1 by ck1a, p2 by gsk3
 Monomer('Btrcp', ['bcat'])
+Monomer('Li', ['gsk3'])
 
 # Initials
 Parameter('Axin_0', 100)
@@ -27,13 +30,15 @@ Parameter('Ck1a_0', 50)
 Parameter('Apc_0', 50)
 Parameter('Bcat_0', 100)
 Parameter('Btrcp_0', 50)
+Parameter('Li_0', 0)
 
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
-Initial(Gsk3(axin=None), Gsk3_0)
+Initial(Gsk3(axin=None, lithium=None), Gsk3_0)
 Initial(Ck1a(axin=None), Ck1a_0)
 Initial(Apc(axin=None, aa15=None, aa20=None, state='u'), Apc_0)
 Initial(Bcat(top=None, bottom=None, nterm='u', state='x'), Bcat_0)
 Initial(Btrcp(bcat=None), Btrcp_0)
+Initial(Li(gsk3=None), Li_0)
 
 #observables
 # Observable('Axin_tot', Axin())   # total amount of axin
@@ -56,9 +61,9 @@ Observable('apc_axin', Axin(apc=ANY))
 Observable('dcplx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('bcat_dcplx', Axin(bcat=ANY, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('bcat_p1', Bcat(top=ANY, nterm='p1'))
-Observable('bcat_p2', Bcat(top=ANY, nterm='p2'))
+Observable('bcat_p2', Bcat(top=ANY, nterm='p2'))  # We think phos of Bcat by GSK3 is "kinase activity" in Stambolic1996
 Observable('apc_p1', Apc(state='p1'))
-Observable('apc_p2', Apc(state='p2'))
+Observable('apc_p2', Apc(state='p2'))  # We think phos of Apc by GSK3 is "kinase activity" in Stambolic1996
 Observable('bcat_apc_aa15', Apc(aa15=ANY, aa20=None))
 Observable('bcat_apc_aa20', Apc(aa15=None, aa20=ANY))
 Observable('bcat_apc_both', Apc(aa15=ANY, aa20=ANY))
@@ -67,16 +72,20 @@ Observable('bcat_ub_apc_btrcp', Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1) 
 Observable('bcat_ub_btrcp', Bcat(top=None, bottom=1, state='ub') % Btrcp(bcat=1))
 Observable('bcat_ub_btrcp_total', Bcat(bottom=1, state='ub') % Btrcp(bcat=1))
 Observable('bcat_ub_total', Bcat(state='ub'))
-
+Observable('bcat_total', Bcat())
+Observable('Li_total', Li())
+Observable('Li_Gsk3', Li(gsk3=ANY))
 
 OBS = [
-    ['ck1a_axin', 'gsk3_axin', 'apc_axin'],
-    ['dcplx', 'bcat_dcplx'],
-    ['bcat_p1', 'bcat_p2'],
-    ['apc_p1', 'apc_p2'],
-    ['bcat_apc_aa15', 'bcat_apc_aa20', 'bcat_apc_both'],
-    ['bcat_ub_apc', 'bcat_ub_apc_btrcp', 'bcat_ub_btrcp',
-     'bcat_ub_btrcp_total', 'bcat_ub_total']
+    # ['ck1a_axin', 'gsk3_axin', 'apc_axin'],
+    # ['dcplx', 'bcat_dcplx'],
+    # ['bcat_p1', 'bcat_p2'],
+    # ['apc_p1', 'apc_p2'],
+    # ['bcat_apc_aa15', 'bcat_apc_aa20', 'bcat_apc_both'],
+    # ['bcat_ub_apc', 'bcat_ub_apc_btrcp', 'bcat_ub_btrcp',
+    #  'bcat_ub_btrcp_total', 'bcat_ub_total'],
+    # ['bcat_ub_total', 'Li_total', 'Li_Gsk3'],
+    ['bcat_total']
 ]
 
 # Rate constants
@@ -91,11 +100,11 @@ Parameter('kr_bcat_dtcpx', 0.1)
 Parameter('kf_bcat_apc', 100)
 Parameter('kr_bcat_apc', 0.1)
 Parameter('kf_bcat_phos_gsk3', 100)
-# Parameter('kr_bcat_phos_gsk3', 1)
+# Parameter('kr_bcat_phos_gsk3', 1)  # assuming (for now) that all dephos rates are equal to k_dephos
 Parameter('kf_bcat_phos_ck1a', 10)
-# Parameter('kr_bcat_phos_ck1a', 1)
+# Parameter('kr_bcat_phos_ck1a', 1)  # assuming (for now) that all dephos rates are equal to k_dephos
 Parameter('kf_apc_phos_ck1a', 20)
-# Parameter('kr_apc_phos_ck1a', 2)
+# Parameter('kr_apc_phos_ck1a', 2)  # assuming (for now) that all dephos rates are equal to k_dephos
 Parameter('kf_apc_phos_gsk3', 200)
 Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 100)
@@ -104,7 +113,8 @@ Parameter('kr_btrcp_binds_bcat', 1)
 Parameter('k_bcat_ubiq', 1)
 Parameter('k_bcat_release', 1)
 Parameter('k_bcat_deg', 0.1)
-
+Parameter('kf_gsk3_li', 1)
+Parameter('kr_gsk3_li', 0.01)
 
 # Rules
 
@@ -171,8 +181,16 @@ Rule('Bcat_binds_dtcpx',
 Rule('bcat_p_ck1a', Bcat(top=1, nterm='u') % Axin(bcat=1) | Bcat(top=1, nterm='p1') % Axin(bcat=1),
      kf_bcat_phos_ck1a, k_dephos)  # ck1a phos first
 
-Rule('bcat_p_gsk3', Bcat(top=1, nterm='p1') % Axin(bcat=1) | Bcat(top=1, nterm='p2') % Axin(bcat=1),
-     kf_bcat_phos_gsk3, k_dephos)  # then gsk3b phos after
+Rule('bcat_p_gsk3', Bcat(top=1, nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, lithium=None) >>
+     Bcat(top=1, nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, lithium=None),
+     kf_bcat_phos_gsk3)  # then gsk3b phos
+
+# Don't restrict dephosphorylation of Bcat to case where Gsk3 is not bound to lithium
+# (i.e., Li could bind after phosphorylation of Bcat by Gsk3. Should be allowed to desphosphorylate in that case)
+Rule('bcat_unp2', Bcat(top=1, nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2) >>
+     Bcat(top=1, nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2), k_dephos)
+
+Rule('lithium_binds_GSK3', Gsk3(lithium=None) + Li(gsk3=None) | Gsk3(lithium=1) % Li(gsk3=1), kf_gsk3_li, kr_gsk3_li)
 
 # Bcat binds to aa15 site of APC (it is assumed phosphorylation state of Bcat does not affect binding)
 Rule('Bcat_binds_aa15', Bcat(top=1, bottom=None) % Axin(bcat=1, apc=2) % Apc(axin=2, state='u', aa15=None) |
@@ -185,8 +203,8 @@ Rule('apc_p_ck1a', Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='u', axin=ANY)
 
 Rule('apc_unp1', Apc(state='p1', aa20=None) >> Apc(state='u', aa20=None), k_dephos)
 
-Rule('apc_p_gsk3', Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='p1', axin=ANY) % Ck1a() % Gsk3() >>
-     Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='p2', axin=ANY) % Ck1a() % Gsk3(), kf_apc_phos_gsk3)
+Rule('apc_p_gsk3', Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='p1', axin=ANY) % Ck1a() % Gsk3(lithium=None) >>
+     Bcat(bottom=1, nterm='p2') % Apc(aa15=1, state='p2', axin=ANY) % Ck1a() % Gsk3(lithium=None), kf_apc_phos_gsk3)
 
 Rule('apc_unp2', Apc(state='p2', aa20=None) >> Apc(state='p1', aa20=None), k_dephos)
 
@@ -228,13 +246,16 @@ result = sim.run()
      # if obs.name == 'bcat_free':
      #      plt.legend(loc=0)
      #      plt.figure()
-for group in OBS:
+for i, group in enumerate(OBS):
     plt.figure()
     for obs_name in group:
         plt.plot(tspan, result.observables[obs_name], lw=2, label=obs_name)
     plt.legend(loc=0)
     plt.xlabel('time')
     plt.ylabel('concentration')
+    ###
+    if i == len(OBS)-1:
+        plt.ylim(ymin=99.9875, ymax=100.0025)
 
 # print(len(model.species))
 # for sp in model.species:
