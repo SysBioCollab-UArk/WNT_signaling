@@ -75,6 +75,8 @@ Observable('bcat_ub_total', Bcat(state='ub'))
 Observable('bcat_total', Bcat())
 Observable('Li_total', Li())
 Observable('Li_Gsk3', Li(gsk3=ANY))
+###
+Observable('GSK3_activity', Bcat(nterm='p2') + Apc(state='p2'))
 
 OBS = [
     # ['ck1a_axin', 'gsk3_axin', 'apc_axin'],
@@ -239,6 +241,8 @@ Rule('apc_release_bcat',
 Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 
 #running simulations
+
+'''
 tspan = np.linspace(0, 1, 101)
 sim = ScipyOdeSimulator(model, tspan, verbose=True)
 result = sim.run()
@@ -256,20 +260,27 @@ for i, group in enumerate(OBS):
     ###
     if i == len(OBS)-1:
         plt.ylim(ymin=99.9875, ymax=100.0025)
+'''
 
-# print(len(model.species))
-# for sp in model.species:
-#      print(sp)
+# In silico Li experiments of GSK3 activity
+# Comparing to Fig. 1(a) of Stambolic et al. (1996): doi:10.1016/s0960-9822(02)70790-2
+tspan = np.linspace(0, 40, 101)
+sim = ScipyOdeSimulator(model, tspan, verbose=True)
+result = sim.run()
+
+# plt.plot(tspan, result.observables['GSK3_activity'], lw=2, label='GSK3_activity')
+
+gsk3_activity = []
+Li_conc = np.arange(0, 101, 5)
+for conc in Li_conc:
+    print(conc)
+    result = sim.run(param_values={'Li_0': conc})
+    gsk3_activity.append(result.observables['GSK3_activity'][-1])
+gsk3_activity = np.array(gsk3_activity)
+
+plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o')
+plt.xlabel('Li concentration')
+plt.ylabel('GSK3 activity')
 
 plt.show()
 
-# print(model.monomers)
-# print()
-# print(model.rules)
-# print()
-# generate_equations(model,verbose=True)
-# for i,sp in enumerate(model.species):
-#      print(i,sp)
-# print()
-# for i,rxn in enumerate(model.reactions):
-#      print(i,rxn)
