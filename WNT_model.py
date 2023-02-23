@@ -27,20 +27,20 @@ Monomer('Dkk1', ['rec'])   # wnt receptor inhibitor
 Monomer('Wif1', ['wnt']) # wnt ligand inhibitor
 #Monomer('LiCl',['Gsk3b'])
 # initials
-Parameter('Bcat_0', 50)
+Parameter('Bcat_0', 100)
 Parameter('Gli2_0', 50)
-Parameter('gGli2_0', 1)
+Parameter('gGli2_0', 10)
 Parameter('Wnt_0', 100)
-Parameter('Btrcp_0', 50)
-Parameter('Tcf4_0', 50)
+Parameter('Btrcp_0', 30) #50
+Parameter('Tcf4_0', 100)
 Parameter('Smad3_0', 50)
-Parameter('Gsk3b_0', 0)
-Parameter('Axin_0',0)
-Parameter('Rec_0', 50)
+Parameter('Gsk3b_0', 50)
+Parameter('Axin_0',100)
+Parameter('Rec_0', 100)
 Parameter('Dvl_0', 50)
 Parameter('gPthlh_0', 1)
-Parameter('Apc_0', 0)
-Parameter('Dkk1_0', 0)
+Parameter('Apc_0', 50)
+Parameter('Dkk1_0', 100)
 Parameter('Wif1_0', 0)
 
 Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
@@ -74,9 +74,9 @@ Parameter('k_bcat_ubiq', 0.1)
 Parameter('k_bcat_deg', 0.001)
 k_bcat_dvl = [
      Parameter('kf_bcat_dvl', 10),
-     Parameter('kr_bcat_dvl', 1)]
+     Parameter('kr_bcat_dvl', 10)]
 Parameter('k_bcat_apc', 1)
-Parameter('k_bcat_release', 1)
+Parameter('k_bcat_release', 10)
 Parameter('k_bcat_nuc', 10)
 k_bcat_tcf4 = [
      Parameter('kf_bcat_tcf4', 1),
@@ -225,16 +225,24 @@ Rule('dkk1_binds_rec', Dkk1(rec=None) + Rec(wnt=None) | Dkk1(rec=1) % Rec(wnt=1)
 Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
 
 # run simulation
-tspan=np.linspace(0,500,501)
+tspan=np.linspace(0,40,101)
 sim=ScipyOdeSimulator(model,tspan,verbose=True)
 traj=sim.run()
-
+fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
+row=0
+col=0
 for obs in model.observables:
-     plt.figure()
-     plt.plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
-     plt.legend(loc=0)
-     plt.xlabel('Time (arbitrary units)')
-     plt.ylabel('Molecule count')
-     plt.ticklabel_format(style='plain')
+     #plt.figure()
+     axs[row,col].plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
+     axs[row,col].legend(loc=0)
+     axs[row,col].set_xlabel('Time (arbitrary units)')
+     axs[row,col].set_ylabel('Molecule count')
+     axs[row,col].ticklabel_format(style='scientific')
+     if ((col+1) % 2 == 0):
+         row += 1
+         col = 0
+     else:
+         col += 1
 
+plt.tight_layout(pad=1)
 plt.show()
