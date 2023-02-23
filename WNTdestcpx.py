@@ -30,23 +30,23 @@ Monomer('Dkk1', ['rec'])   # wnt receptor inhibitor
 Monomer('Wif1', ['wnt']) # wnt ligand inhibitor
 
 # Initials
-Parameter('Axin_0', 100)
-Parameter('Gsk3_0', 50)
-Parameter('Ck1a_0', 50)
-Parameter('Apc_0', 50)
 Parameter('Bcat_0', 100)
-Parameter('Btrcp_0', 50)
-Parameter('Li_0', 0)
 Parameter('Gli2_0', 50)
 Parameter('gGli2_0', 10)
 Parameter('Wnt_0', 100)
+Parameter('Btrcp_0', 50)
 Parameter('Tcf4_0', 100)
 Parameter('Smad3_0', 50)
+Parameter('Gsk3_0', 50) #0
+Parameter('Axin_0', 100) #0
 Parameter('Rec_0', 100)
 Parameter('Dvl_0', 50)
 Parameter('gPthlh_0', 1)
+Parameter('Apc_0', 50) #0
 Parameter('Dkk1_0', 100)
 Parameter('Wif1_0', 0)
+Parameter('Ck1a_0', 50)
+Parameter('Li_0', 0)
 
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
 Initial(Gsk3(axin=None, lithium=None, dvl=None), Gsk3_0)
@@ -151,9 +151,9 @@ Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 100)
 Parameter('kf_btrcp_binds_bcat', 0.01)
 Parameter('kr_btrcp_binds_bcat', 1)
-Parameter('k_bcat_ubiq', 1)
-Parameter('k_bcat_release', 1)
-Parameter('k_bcat_deg', 0.1)
+Parameter('k_bcat_ubiq', 0.1) #1
+Parameter('k_bcat_release', 10) #1
+Parameter('k_bcat_deg', 0.001) #0.1
 Parameter('kf_gsk3_li', 1)
 Parameter('kr_gsk3_li', 0.01)
 #WNT parameters
@@ -208,6 +208,10 @@ k_dkk1_rec = [
 k_wif_wnt = [
      Parameter('kf_wif_wnt', 1),
      Parameter('kr_wif_wnt', 1)]
+
+
+
+
 
 # Rules
 def destcpx_rules():
@@ -352,6 +356,7 @@ def wntmodel_rules():
     Rule('Bcat_to_nucleus', Bcat(top=None,bottom=None,loc='cyt') >> Bcat(top=None,bottom=None,loc='nuc'), \
          k_bcat_nuc)
 
+
     # Beta catenin in nuclues binds to TCF4
     # TODO: Does tcf4 bind gGli2 before bcat binds?
     Rule('Bcat_tcf4', Bcat(tcf4=None,loc='nuc') + Tcf4(bcat=None) | Bcat(tcf4=1,loc='nuc') % Tcf4(bcat=1), *k_bcat_tcf4)
@@ -424,7 +429,7 @@ def wntmodel_rules():
     # WIF binds WNT3A
     Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
 
-# destcpx_rules()
+destcpx_rules()
 wntmodel_rules()
 
 #run simulation
@@ -453,15 +458,23 @@ plt.legend(loc=0)
 # tspan=np.linspace(0,500,501)
 # sim=ScipyOdeSimulator(model,tspan,verbose=True)
 # traj=sim.run()
-
+fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
+row=0
+col=0
 for obs in wnt_observables:
-     plt.figure()
-     plt.plot(tspan, result.observables[obs.name], lw=2, label=obs.name)
-     plt.legend(loc=0)
-     plt.xlabel('Time (arbitrary units)')
-     plt.ylabel('Molecule count')
-     plt.ticklabel_format(style='plain')
-plt.tight_layout()
+     #plt.figure()
+     axs[row,col].plot(tspan, result.observables[obs.name], lw=2, label=obs.name)
+     axs[row,col].legend(loc=0)
+     axs[row,col].set_xlabel('Time (arbitrary units)')
+     axs[row,col].set_ylabel('Molecule count')
+     axs[row,col].ticklabel_format(style='scientific')
+     if ((col+1) % 2 == 0):
+         row += 1
+         col = 0
+     else:
+         col += 1
+
+plt.tight_layout(pad=1)
 plt.show()
 
 
