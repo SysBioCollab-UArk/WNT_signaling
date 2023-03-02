@@ -112,9 +112,9 @@ Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 100)
 Parameter('kf_btrcp_binds_bcat', 0.01)
 Parameter('kr_btrcp_binds_bcat', 1)
-Parameter('k_bcat_ubiq', 1)
-Parameter('k_bcat_release', 1)
-Parameter('k_bcat_deg', 0.1)
+Parameter('k_bcat_ubiq', 0.1)#1
+Parameter('k_bcat_release', 10)#1
+Parameter('k_bcat_deg', 0.001)#0.1
 Parameter('kf_gsk3_li', 1)
 Parameter('kr_gsk3_li', 0.01)
 

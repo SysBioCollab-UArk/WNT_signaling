@@ -32,9 +32,9 @@ Monomer('Wif1', ['wnt']) # wnt ligand inhibitor
 # Initials
 Parameter('Bcat_0', 100)
 Parameter('Gli2_0', 50)
-Parameter('gGli2_0', 10)
+Parameter('gGli2_0', 1)
 Parameter('Wnt_0', 100)
-Parameter('Btrcp_0', 50)
+Parameter('Btrcp_0', 30) #50
 Parameter('Tcf4_0', 100)
 Parameter('Smad3_0', 50)
 Parameter('Gsk3_0', 50) #0
@@ -47,6 +47,7 @@ Parameter('Dkk1_0', 100)
 Parameter('Wif1_0', 0)
 Parameter('Ck1a_0', 50)
 Parameter('Li_0', 0)
+
 
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
 Initial(Gsk3(axin=None, lithium=None, dvl=None), Gsk3_0)
@@ -129,6 +130,11 @@ wnt_observables = [pthrp_tot,gli2_tot,gli2_cyt,gli2_nuc,bcat_tot,bcat_cyt,bcat_n
 
 
 # Rate constants
+#Common Parameters
+Parameter('k_bcat_ubiq', 0.1) #1
+Parameter('k_bcat_release', 10) #1
+Parameter('k_bcat_deg', 0.001) #0.1
+
 #destcpx parameters
 Parameter('kf_axin_ck1a', 1)
 Parameter('kr_axin_ck1a', 10)
@@ -151,11 +157,10 @@ Parameter('k_dephos', 0.1)
 Parameter('kf_bcat_binds_apc', 100)
 Parameter('kf_btrcp_binds_bcat', 0.01)
 Parameter('kr_btrcp_binds_bcat', 1)
-Parameter('k_bcat_ubiq', 0.1) #1
-Parameter('k_bcat_release', 10) #1
-Parameter('k_bcat_deg', 0.001) #0.1
 Parameter('kf_gsk3_li', 1)
 Parameter('kr_gsk3_li', 0.01)
+
+
 #WNT parameters
 k_bcat_dvl = [
      Parameter('kf_bcat_dvl', 10),
@@ -213,7 +218,44 @@ k_wif_wnt = [
 
 
 
+
+
+
 # Rules
+#Common Rules
+ #Btrcp ubiquitinates bcat
+ #WNT Model Common Rules
+
+
+# Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
+# Rule('Bcat_ubiq', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) >> \
+#      Bcat(gsk3b=None,apc=None,btrcp=3,state='ub',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
+#      k_bcat_ubiq)
+#
+# # Beta catenin degradation
+# Rule('Bcat_degradation', Bcat(gsk3b=None,apc=None,btrcp=1,state='ub') % Btrcp(b=1) >> Btrcp(b=None), k_bcat_deg)
+
+#Destcpx Model Common Rules
+# Rule('btrcp_binds_bcat',
+#      Bcat(top=1, nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
+#      Bcat(top=1, nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
+#      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
+
+#  Btrcp ubiquitinates bcat
+# Rule('Bcat_ubiq',
+#      Bcat(top=1, bottom=2, state='x') % Apc(aa20=1) % Btrcp(bcat=2) >>
+#      Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1) % Btrcp(bcat=2), k_bcat_ubiq)
+#
+# # Bcat degraded by proteosome
+# Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
+
+# Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
+Rule('Bcat_ubiq',
+     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='x') % Apc(aa20=1) % Btrcp(bcat=2) >>
+     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(bcat=2), k_bcat_ubiq)
+
+# Bcat degraded by proteosome
+Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 def destcpx_rules():
     # Axin binding rules
     # We require beta-catenin to NOT be bound for these binding event to occur
@@ -326,9 +368,9 @@ def destcpx_rules():
     # should axin=any be included?
 
     #  Btrcp ubiquitinates bcat
-    Rule('Bcat_ubiq',
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='x') % Apc(aa20=1) % Btrcp(bcat=2) >>
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(bcat=2), k_bcat_ubiq)
+    # Rule('Bcat_ubiq',
+    #      Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='x') % Apc(aa20=1) % Btrcp(bcat=2) >>
+    #      Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(bcat=2), k_bcat_ubiq)
 
     # Apc release bcat by dephos
     Rule('apc_release_bcat',
@@ -336,7 +378,7 @@ def destcpx_rules():
          Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) + Apc(aa20=None), k_bcat_release)
 
     # Bcat degraded by proteosome
-    Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
+    #Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 
 
 def wntmodel_rules():
@@ -429,13 +471,13 @@ def wntmodel_rules():
     # WIF binds WNT3A
     Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
 
-destcpx_rules()
+#destcpx_rules()
 wntmodel_rules()
 
 #run simulation
-tspan=np.linspace(0,40,101)
-sim=ScipyOdeSimulator(model,tspan,verbose=False)
-result=sim.run()
+# tspan=np.linspace(0,40,101)
+# sim=ScipyOdeSimulator(model,tspan,verbose=False)
+# result=sim.run()
 
 '''
 Li_conc = np.arange(0, 101, 5)
@@ -454,16 +496,17 @@ plt.ylabel('GSK3 activity')
 plt.legend(loc=0)
 '''
 
-# run simulation(WNT)
-# tspan=np.linspace(0,500,501)
-# sim=ScipyOdeSimulator(model,tspan,verbose=True)
-# traj=sim.run()
+#run simulation(WNT)
+#tspan=np.linspace(0,500,501)
+tspan=np.linspace(0,40,101)
+sim=ScipyOdeSimulator(model,tspan,verbose=True)
+traj=sim.run()
 fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
 row=0
 col=0
 for obs in wnt_observables:
      #plt.figure()
-     axs[row,col].plot(tspan, result.observables[obs.name], lw=2, label=obs.name)
+     axs[row,col].plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
      axs[row,col].legend(loc=0)
      axs[row,col].set_xlabel('Time (arbitrary units)')
      axs[row,col].set_ylabel('Molecule count')
@@ -473,7 +516,7 @@ for obs in wnt_observables:
          col = 0
      else:
          col += 1
-
+#
 plt.tight_layout(pad=1)
 plt.show()
 

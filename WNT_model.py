@@ -29,7 +29,7 @@ Monomer('Wif1', ['wnt']) # wnt ligand inhibitor
 # initials
 Parameter('Bcat_0', 100)
 Parameter('Gli2_0', 50)
-Parameter('gGli2_0', 10)
+Parameter('gGli2_0', 1)
 Parameter('Wnt_0', 100)
 Parameter('Btrcp_0', 30) #50
 Parameter('Tcf4_0', 100)
