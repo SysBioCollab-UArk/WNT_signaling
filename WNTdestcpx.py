@@ -217,40 +217,12 @@ k_wif_wnt = [
      Parameter('kf_wif_wnt', 1),
      Parameter('kr_wif_wnt', 1)]
 
-
-
-
-
-
-
-
-# Rules
 #Common Rules
- #Btrcp ubiquitinates bcat
- #WNT Model Common Rules
 
-
-# Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
-# Rule('Bcat_ubiq', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) >> \
-#      Bcat(gsk3b=None,apc=None,btrcp=3,state='ub',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
-#      k_bcat_ubiq)
-#
-# # Beta catenin degradation
-# Rule('Bcat_degradation', Bcat(gsk3b=None,apc=None,btrcp=1,state='ub') % Btrcp(b=1) >> Btrcp(b=None), k_bcat_deg)
-
-#Destcpx Model Common Rules
-# Rule('btrcp_binds_bcat',
-#      Bcat(top=1, nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
-#      Bcat(top=1, nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
-#      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
-
-#  Btrcp ubiquitinates bcat
-# Rule('Bcat_ubiq',
-#      Bcat(top=1, bottom=2, state='x') % Apc(aa20=1) % Btrcp(bcat=2) >>
-#      Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1) % Btrcp(bcat=2), k_bcat_ubiq)
-#
-# # Bcat degraded by proteosome
-# Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
+Rule('btrcp_binds_bcat',
+         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
+         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
+         kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
 
 # Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
 Rule('Bcat_ubiq',
@@ -367,10 +339,10 @@ def create_destcpx_rules(create=True):
 
     #  Btrcp binds bcat
     # we are assuming that btrcp can bind (and unbind) to bcat whether it is ubiquitinated or not
-    Rule('btrcp_binds_bcat',
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
-         kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
+    # Rule('btrcp_binds_bcat',
+    #      Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) + Btrcp(bcat=None) |
+    #      Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) % Btrcp(bcat=2),
+    #      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
 
     # should axin=any be included?
 
@@ -391,6 +363,20 @@ def create_destcpx_rules(create=True):
 def create_wntmodel_rules(create=True):
     if not create:
         return False
+
+    # # Beta Catenin binds btrcp
+    # Rule('Bcat_binds_btrcp',
+    #      Bcat(gsk3b=1, apc=2, btrcp=None, state='x', loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) | \
+    #      Bcat(gsk3b=None, apc=None, btrcp=3, state='x', loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
+    #      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
+    #
+    # # Beta Catenin Ubiquitination
+    # Rule('Bcat_Ubiq', Bcat(gsk3b=None, apc=None, btrcp=3, state='x', loc='cyt') % Btrcp(b=3) >>
+    #      Bcat(gsk3b=None, apc=None, btrcp=3, state='ub', loc='cyt') % Btrcp(b=3), k_bcat_ubiq)
+    #
+    # # Beta catenin degradation
+    # Rule('Bcat_degradation', Bcat(gsk3b=None, apc=None, btrcp=1, state='ub', loc='cyt') % Btrcp(b=1) >> Btrcp(b=None),
+    #      k_bcat_deg)
 
     Rule('Bcat_DVL', Bcat(top=1,bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3,dvl=None) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) + Dvl(gsk3=None,rec=ANY) | \
          Bcat(top=1,bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3,dvl=4) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) % Dvl(gsk3=4,rec=ANY), *k_bcat_dvl)
@@ -487,12 +473,12 @@ wntmodel_rules=create_wntmodel_rules(create=True)
 
 #run simulation
 tspan=np.linspace(0,40,101)
-sim=ScipyOdeSimulator(model,tspan,verbose=False)
-# traj=sim.run()
+sim=ScipyOdeSimulator(model,tspan,verbose=True)
+traj=sim.run()
 
 if destcpx_rules:
     plt.figure()
-    sim_destcpx=ScipyOdeSimulator(destcpx_model, tspan, verbose=False)
+    sim_destcpx=ScipyOdeSimulator(destcpx_model, tspan, verbose=True)
     Li_conc = np.arange(0, 101, 5)
     for kf in [1,10,100]:
         gsk3_activity = []
