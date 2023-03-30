@@ -71,6 +71,8 @@ Observable('bcat_nuc', Bcat(loc='nuc'))
 
 # rate constants
 Parameter('k_bcat_ubiq', 0.1)
+Parameter('kf_btrcp_binds_bcat', 0.01)
+Parameter('kr_btrcp_binds_bcat', 1)
 Parameter('k_bcat_deg', 0.001)
 k_bcat_dvl = [
      Parameter('kf_bcat_dvl', 10),
@@ -125,15 +127,28 @@ k_wif_wnt = [
      Parameter('kf_wif_wnt', 1),
      Parameter('kr_wif_wnt', 1)]
 
+
 # rules
 
 # Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
-Rule('Bcat_ubiq', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) >> \
-     Bcat(gsk3b=None,apc=None,btrcp=3,state='ub',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
-     k_bcat_ubiq)
+# Rule('Bcat_ubiq', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) >> \
+#      Bcat(gsk3b=None,apc=None,btrcp=3,state='ub',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
+#      k_bcat_ubiq)
+
+#Beta Catenin binds btrcp
+#kf_btrcp_binds_bcat, kr_btrcp_binds_bcat
+Rule('Bcat_binds_btrcp', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) | \
+       Bcat(gsk3b=None,apc=None,btrcp=3,state='x',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
+       kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
+
+#Beta Catenin Ubiquitination
+#k_bcat_ubiq
+Rule('Bcat_Ubiq', Bcat(gsk3b=None,apc=None,btrcp=3,state='x',loc='cyt') % Btrcp(b=3) >>
+Bcat(gsk3b=None,apc=None,btrcp=3,state='ub',loc='cyt') % Btrcp(b=3),k_bcat_ubiq)
+
 
 # Beta catenin degradation
-Rule('Bcat_degradation', Bcat(gsk3b=None,apc=None,btrcp=1,state='ub') % Btrcp(b=1) >> Btrcp(b=None), k_bcat_deg)
+Rule('Bcat_degradation', Bcat(gsk3b=None,apc=None,btrcp=1,state='ub',loc='cyt') % Btrcp(b=1) >> Btrcp(b=None), k_bcat_deg)
 
 # Beta cantenin in destruction complex binds to DVL at the receptor
 #Adding gsk3b and AXIN and find out what happen with it
@@ -223,7 +238,7 @@ Rule('dkk1_binds_rec', Dkk1(rec=None) + Rec(wnt=None) | Dkk1(rec=1) % Rec(wnt=1)
 
 # WIF binds WNT3A
 Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
-
+'''
 # run simulation
 tspan=np.linspace(0,40,101)
 sim=ScipyOdeSimulator(model,tspan,verbose=True)
@@ -246,3 +261,4 @@ for obs in model.observables:
 
 plt.tight_layout(pad=1)
 plt.show()
+'''

@@ -2,6 +2,9 @@ from pysb import *
 import numpy as np
 import matplotlib.pyplot as plt
 from pysb.simulator import ScipyOdeSimulator
+from WNT_model import model as wnt_model
+from destcpx import model as destcpx_model
+
 
 Model()
 # monomer
@@ -122,7 +125,7 @@ Observable('gli2_nuc', Gli2(loc='nuc'))
 Observable('bcat_tot', Bcat())
 Observable('bcat_cyt', Bcat(loc='cyt'))
 Observable('bcat_nuc', Bcat(loc='nuc'))
-wnt_observables = [pthrp_tot,gli2_tot,gli2_cyt,gli2_nuc,bcat_tot,bcat_cyt,bcat_nuc]
+wnt_observables = ['pthrp_tot','gli2_tot','gli2_cyt','gli2_nuc','bcat_tot','bcat_cyt','bcat_nuc']
 
 
 
@@ -256,7 +259,10 @@ Rule('Bcat_ubiq',
 
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
-def destcpx_rules():
+
+def create_destcpx_rules(create=True):
+    if not create:
+        return False
     # Axin binding rules
     # We require beta-catenin to NOT be bound for these binding event to occur
     # We assume beta-catenin can only bind when all three of Ck1a, Gsk3, and Apc are bound
@@ -266,6 +272,7 @@ def destcpx_rules():
          kf_axin_gsk3)
     Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None) >> Axin(bcat=None, apc=1) % Apc(axin=1),
          kf_axin_apc)
+
 
     # Axin unbinding rules
     # We only allow Ck1a, Gsk3, and Apc to unbind if at least one of the others is not bound. If all three are
@@ -380,8 +387,10 @@ def destcpx_rules():
     # Bcat degraded by proteosome
     #Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 
-
-def wntmodel_rules():
+    return True
+def create_wntmodel_rules(create=True):
+    if not create:
+        return False
 
     Rule('Bcat_DVL', Bcat(top=1,bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3,dvl=None) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) + Dvl(gsk3=None,rec=ANY) | \
          Bcat(top=1,bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3,dvl=4) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) % Dvl(gsk3=4,rec=ANY), *k_bcat_dvl)
@@ -471,51 +480,64 @@ def wntmodel_rules():
     # WIF binds WNT3A
     Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
 
-#destcpx_rules()
-wntmodel_rules()
+    return True
+
+destcpx_rules=create_destcpx_rules(create=True)
+wntmodel_rules=create_wntmodel_rules(create=True)
 
 #run simulation
-# tspan=np.linspace(0,40,101)
-# sim=ScipyOdeSimulator(model,tspan,verbose=False)
-# result=sim.run()
+tspan=np.linspace(0,40,101)
+sim=ScipyOdeSimulator(model,tspan,verbose=False)
+# traj=sim.run()
 
-'''
-Li_conc = np.arange(0, 101, 5)
-for kf in [1,10,100]:
-    gsk3_activity = []
-    for conc in Li_conc:
-        print(conc, kf)
-        result = sim.run(param_values={'Li_0': conc,'kf_bcat_phos_gsk3': kf})
-        gsk3_activity.append(result.observables['GSK3_activity'][-1])
+if destcpx_rules:
+    plt.figure()
+    sim_destcpx=ScipyOdeSimulator(destcpx_model, tspan, verbose=False)
+    Li_conc = np.arange(0, 101, 5)
+    for kf in [1,10,100]:
+        gsk3_activity = []
+        gsk3_activity2 = []
 
-    gsk3_activity = np.array(gsk3_activity)
+        for conc in Li_conc:
+            print(conc, kf)
+            result = sim.run(param_values={'Li_0': conc,'kf_bcat_phos_gsk3': kf})
+            gsk3_activity.append(result.observables['GSK3_activity'][-1])
+            result2 = sim_destcpx.run(param_values={'Li_0': conc, 'kf_bcat_phos_gsk3': kf})
+            gsk3_activity2.append(result2.observables['GSK3_activity'][-1])
 
-    plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
-plt.xlabel('Li concentration')
-plt.ylabel('GSK3 activity')
-plt.legend(loc=0)
-'''
+        gsk3_activity = np.array(gsk3_activity)
+        gsk3_activity2 = np.array(gsk3_activity2)
+
+        plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
+        plt.plot(Li_conc, gsk3_activity2/gsk3_activity2[0], 'o', mfc='none', label="kf=%g" % kf)
+
+    plt.xlabel('Li concentration')
+    plt.ylabel('GSK3 activity')
+    plt.legend(loc=0)
 
 #run simulation(WNT)
-#tspan=np.linspace(0,500,501)
-tspan=np.linspace(0,40,101)
-sim=ScipyOdeSimulator(model,tspan,verbose=True)
-traj=sim.run()
-fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
-row=0
-col=0
-for obs in wnt_observables:
-     #plt.figure()
-     axs[row,col].plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
-     axs[row,col].legend(loc=0)
-     axs[row,col].set_xlabel('Time (arbitrary units)')
-     axs[row,col].set_ylabel('Molecule count')
-     axs[row,col].ticklabel_format(style='scientific')
-     if ((col+1) % 2 == 0):
-         row += 1
-         col = 0
-     else:
-         col += 1
+if wntmodel_rules:
+    fig, axs = plt.subplots(nrows=4, ncols=2, figsize=(6.4, 9.6))
+    traj=sim.run()
+    sim_wnt=ScipyOdeSimulator(wnt_model,tspan,verbose=True)
+    traj_wnt=sim_wnt.run()
+    row=0
+    col=0
+    for obs in wnt_observables:
+         #plt.figure()
+         axs[row,col].plot(tspan, traj.observables[obs], lw=2, label=obs)
+         axs[row, col].plot(tspan, traj_wnt.observables[obs], 'o', mfc='none', lw=2, label='wnt_model')
+         axs[row,col].legend(loc=0)
+         axs[row,col].set_xlabel('Time (arbitrary units)')
+         axs[row,col].set_ylabel('Molecule count')
+         axs[row,col].ticklabel_format(style='scientific')
+         if obs == 'bcat_tot':
+             axs[row,col].set_ylim(bottom=80, top=120)
+         if ((col+1) % 2 == 0):
+             row += 1
+             col = 0
+         else:
+             col += 1
 #
 plt.tight_layout(pad=1)
 plt.show()
