@@ -238,27 +238,28 @@ Rule('dkk1_binds_rec', Dkk1(rec=None) + Rec(wnt=None) | Dkk1(rec=1) % Rec(wnt=1)
 
 # WIF binds WNT3A
 Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
-'''
-# run simulation
-tspan=np.linspace(0,40,101)
-sim=ScipyOdeSimulator(model,tspan,verbose=True)
-traj=sim.run()
-fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
-row=0
-col=0
-for obs in model.observables:
-     #plt.figure()
-     axs[row,col].plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
-     axs[row,col].legend(loc=0)
-     axs[row,col].set_xlabel('Time (arbitrary units)')
-     axs[row,col].set_ylabel('Molecule count')
-     axs[row,col].ticklabel_format(style='scientific')
-     if ((col+1) % 2 == 0):
-         row += 1
-         col = 0
-     else:
-         col += 1
 
-plt.tight_layout(pad=1)
-plt.show()
-'''
+if __name__ == '__main__':
+     # run simulation
+     tspan=np.linspace(0,40,101)
+     sim=ScipyOdeSimulator(model,tspan,verbose=True)
+     traj=sim.run()
+     fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
+     row=0
+     col=0
+     for obs in model.observables:
+          #plt.figure()
+          axs[row,col].plot(tspan, traj.observables[obs.name], lw=2, label=obs.name)
+          axs[row,col].legend(loc=0)
+          axs[row,col].set_xlabel('Time (arbitrary units)')
+          axs[row,col].set_ylabel('Molecule count')
+          axs[row,col].ticklabel_format(style='scientific')
+          if ((col+1) % 2 == 0):
+              row += 1
+              col = 0
+          else:
+              col += 1
+
+     plt.tight_layout(pad=1)
+     plt.show()
+

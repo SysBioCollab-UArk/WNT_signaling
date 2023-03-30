@@ -240,54 +240,56 @@ Rule('apc_release_bcat',
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
 
-#running simulations
+if __name__ == '__main__':
 
-'''
-tspan = np.linspace(0, 1, 101)
-sim = ScipyOdeSimulator(model, tspan, verbose=True)
-result = sim.run()
-# for obs in model.observables:
-     # if obs.name == 'bcat_free':
-     #      plt.legend(loc=0)
-     #      plt.figure()
-for i, group in enumerate(OBS):
-    plt.figure()
-    for obs_name in group:
-        plt.plot(tspan, result.observables[obs_name], lw=2, label=obs_name)
-    plt.legend(loc=0)
-    plt.xlabel('time')
-    plt.ylabel('concentration')
-    ###
-    if i == len(OBS)-1:
-        plt.ylim(ymin=99.9875, ymax=100.0025)
-'''
+     #running simulations
 
-# In silico Li experiments of GSK3 activity
-# Comparing to Fig. 1(a) of Stambolic et al. (1996): doi:10.1016/s0960-9822(02)70790-2
-# tspan = np.linspace(0, 40, 101)
-# sim = ScipyOdeSimulator(model, tspan, verbose=False)
-# result = sim.run()
-#
-# # plt.plot(tspan, result.observables['GSK3_activity'], lw=2, label='GSK3_activity')
-# #'kf_bcat_phos_gsk3'
-#
-# #'kf_gsk3_li' [0.1,1]
-#
-# Li_conc = np.arange(0, 101, 5)
-# for kf in [1,10,100]:
-#     gsk3_activity = []
-#     for conc in Li_conc:
-#         print(conc, kf)
-#         result = sim.run(param_values={'Li_0': conc,'kf_bcat_phos_gsk3': kf})
-#         gsk3_activity.append(result.observables['GSK3_activity'][-1])
-#
-#     gsk3_activity = np.array(gsk3_activity)
-#
-#     plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
-# plt.xlabel('Li concentration')
-# plt.ylabel('GSK3 activity')
-# plt.legend(loc=0)
-#
-# plt.show()
+     '''
+     tspan = np.linspace(0, 1, 101)
+     sim = ScipyOdeSimulator(model, tspan, verbose=True)
+     result = sim.run()
+     # for obs in model.observables:
+          # if obs.name == 'bcat_free':
+          #      plt.legend(loc=0)
+          #      plt.figure()
+     for i, group in enumerate(OBS):
+         plt.figure()
+         for obs_name in group:
+             plt.plot(tspan, result.observables[obs_name], lw=2, label=obs_name)
+         plt.legend(loc=0)
+         plt.xlabel('time')
+         plt.ylabel('concentration')
+         ###
+         if i == len(OBS)-1:
+             plt.ylim(ymin=99.9875, ymax=100.0025)
+     '''
+
+     # In silico Li experiments of GSK3 activity
+     # Comparing to Fig. 1(a) of Stambolic et al. (1996): doi:10.1016/s0960-9822(02)70790-2
+     tspan = np.linspace(0, 40, 101)
+     sim = ScipyOdeSimulator(model, tspan, verbose=False)
+     result = sim.run()
+
+     # plt.plot(tspan, result.observables['GSK3_activity'], lw=2, label='GSK3_activity')
+     #'kf_bcat_phos_gsk3'
+
+     #'kf_gsk3_li' [0.1,1]
+
+     Li_conc = np.arange(0, 101, 5)
+     for kf in [1,10,100]:
+         gsk3_activity = []
+         for conc in Li_conc:
+             print(conc, kf)
+             result = sim.run(param_values={'Li_0': conc,'kf_bcat_phos_gsk3': kf})
+             gsk3_activity.append(result.observables['GSK3_activity'][-1])
+
+         gsk3_activity = np.array(gsk3_activity)
+
+         plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
+     plt.xlabel('Li concentration')
+     plt.ylabel('GSK3 activity')
+     plt.legend(loc=0)
+
+     plt.show()
 
 
