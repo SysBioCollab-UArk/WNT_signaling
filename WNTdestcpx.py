@@ -21,7 +21,7 @@ Monomer('Gli2', ['btrcp', 'g_pthlh', 'state', 'loc'], {'state': ['x', 'p', 'ub']
 Monomer('gGli2', ['tcf4', 'smad3'])  # Gli2 gene
 Monomer('mGli2')  # Gli2 mRNA
 Monomer('Wnt', ['rec'])  # Wnt, rec is receptor complex - lrp5 and fzd
-Monomer('Tcf4', ['g_gli2', 'g_pthlh', 'bcat'])  # Tcf4
+Monomer('Tcf4', ['g', 'bcat'])  # Tcf4
 Monomer('Smad3', ['g_gli2'])  # Smad3
 Monomer('Rec', ['wnt', 'dvl'])  # Receptor
 Monomer('Dvl', ['rec', 'gsk3'])  # Dvl
@@ -61,7 +61,7 @@ Initial(Li(gsk3=None), Li_0)
 Initial(Gli2(btrcp=None, state='ub', g_pthlh=None, loc='cyt'), Gli2_0)
 Initial(gGli2(tcf4=None, smad3=None), gGli2_0)
 Initial(Wnt(rec=None), Wnt_0)
-Initial(Tcf4(g_gli2=None, g_pthlh=None, bcat=None), Tcf4_0)
+Initial(Tcf4(g=None, bcat=None), Tcf4_0)
 Initial(Smad3(g_gli2=None), Smad3_0)
 Initial(Rec(wnt=None, dvl=None), Rec_0)
 Initial(Dvl(rec=None, gsk3=None), Dvl_0)
@@ -403,19 +403,26 @@ def create_wntmodel_rules(create=True):
     Rule('Bcat_to_nucleus',
          Bcat(top=None, bottom=None, loc='cyt') >> Bcat(top=None, bottom=None, loc='nuc'), k_bcat_nuc)
 
+    # Monomer('Bcat', ['top', 'bottom', 'nterm', 'state', 'tcf4', 'loc'],  # Added tcf4 and loc components
+    #         {'state': ['x', 'ub'], 'nterm': ['u', 'p1', 'p2'], 'loc': ['cyt', 'nuc']})
+
     # Beta catenin in nuclues binds to TCF4
     # TODO: Does tcf4 bind gGli2 before bcat binds?
-    Rule('Bcat_tcf4', Bcat(tcf4=None,loc='nuc') + Tcf4(bcat=None) | Bcat(tcf4=1,loc='nuc') % Tcf4(bcat=1), *k_bcat_tcf4)
+    Rule('Bcat_tcf4', Bcat(tcf4=None, loc='nuc') + Tcf4(g=ANY, bcat=None) |
+         Bcat(tcf4=1, loc='nuc') % Tcf4(g=ANY, bcat=1),
+         *k_bcat_tcf4)
 
     # TCF4 binds to promoter of Gli2 gene
-    Rule('tcf4_binds_gGli2', Tcf4(g_gli2=None) + gGli2(tcf4=None) | Tcf4(g_gli2=1) % gGli2(tcf4=1), *k_tcf4_gli2)
+    Rule('tcf4_binds_gGli2', Tcf4(g=None, bcat=None) + gGli2(tcf4=None) | Tcf4(g=1, bcat=None) % gGli2(tcf4=1),
+         *k_tcf4_gli2)
 
     # SMAD3 binds to promoter of Gli2 gene
     Rule('smad3_binds_gGli2', Smad3(g_gli2=None) + gGli2(smad3=None) | Smad3(g_gli2=1) % gGli2(smad3=1), *k_smad3_gli2)
 
     # Gli2 gene transcription
-    Rule('gli2_transcription', gGli2(tcf4=1, smad3=ANY) % Tcf4(g_gli2=1, bcat=ANY) >>
-         gGli2(tcf4=1, smad3=ANY) % Tcf4(g_gli2=1, bcat=ANY) + mGli2(), k_gli2_tx)
+    Rule('gli2_transcription', gGli2(tcf4=1, smad3=ANY) % Tcf4(g=1, bcat=ANY) >>
+         gGli2(tcf4=1, smad3=ANY) % Tcf4(g=1, bcat=ANY) + mGli2(),
+         k_gli2_tx)
 
     # Gli2 translation
     Rule('gli2_translation', mGli2() >> mGli2() + Gli2(btrcp=None, g_pthlh=None, state='x', loc='cyt'), k_gli2_tl)
@@ -424,15 +431,16 @@ def create_wntmodel_rules(create=True):
     Rule('mGli2_deg', mGli2() >> None, k_mgli2_deg)
 
     # TCF4 binds to promoter of PTHlH gene
-    Rule('tcf4_binds_gPthlh', Tcf4(g_pthlh=None) + gPthlh(tcf4=None) | Tcf4(g_pthlh=1) % gPthlh(tcf4=1), *k_tcf4_pthlh)
+    Rule('tcf4_binds_gPthlh', Tcf4(g=None, bcat=None) + gPthlh(tcf4=None) | Tcf4(g=1, bcat=None) % gPthlh(tcf4=1),
+         *k_tcf4_pthlh)
 
     # Gli2 binds to promoter of PTHlH gene
     Rule('gli2_binds_gPthlh', Gli2(g_pthlh=None, loc='nuc') + gPthlh(gli2=None) |
          Gli2(g_pthlh=1, loc='nuc') % gPthlh(gli2=1), *k_gli2_pthlh)
 
     # PTHlH gene transcription
-    Rule('gPthlh_transcription', gPthlh(tcf4=1, gli2=ANY) % Tcf4(g_pthlh=1, bcat=ANY) >>
-         gPthlh(tcf4=1, gli2=ANY) % Tcf4(g_pthlh=1, bcat=ANY) + mPthlh(), k_pthlh_tx)
+    Rule('gPthlh_transcription', gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) >>
+         gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) + mPthlh(), k_pthlh_tx)
 
     # PTHrP translation
     Rule('Pthrp_translation', mPthlh() >> mPthlh() + Pthrp(), k_pthrp_tl)
@@ -447,7 +455,9 @@ def create_wntmodel_rules(create=True):
     Rule('Gli2_phospo', Gli2(state='x', loc='cyt', btrcp=None) | Gli2(state='p', loc='cyt', btrcp=None), *k_gli2_phos)
 
     # Phopho-Gli2 translocates to nucleus
-    Rule('Gli2_to_nuc', Gli2(state='p', loc='cyt') | Gli2(state='p', loc='nuc'), *k_gli2_nuc)
+    Rule('Gli2_to_nuc', Gli2(state='p', loc='cyt') >> Gli2(state='p', loc='nuc'), k_gli2_nuc[0])
+    Rule('Gli2_to_cyt', Gli2(state='p', g_pthlh=None, loc='nuc') >> Gli2(state='p', g_pthlh=None, loc='cyt'),
+         k_gli2_nuc[1])
 
     # Gli2 binds BTRCP
     Rule('Gli2_binds_BTRCP', Gli2(state='x', loc='cyt', btrcp=None) + Btrcp(b=None) |
@@ -481,9 +491,46 @@ def create_wntmodel_rules(create=True):
 destcpx_rules = create_destcpx_rules(create=True)
 wntmodel_rules = create_wntmodel_rules(create=True)
 
+# idx = [17, 28, 32, 33, 38]
+# for i, rule in enumerate(model.rules):
+#     if i+1 in idx:
+#        print('%d: %s' % (i+1, rule))
+# quit()
+
 # run simulation
 tspan = np.linspace(0, 40, 101)
 sim = ScipyOdeSimulator(model, tspan, verbose=True)
+
+# for rxn in model.reactions:
+#     if 'Bcat_tcf4' in rxn['rule']:
+#         print(rxn)
+#         outstring = ''
+#         if len(rxn['reactants']) == 0:
+#             outstring += 'None'
+#         else:
+#             outstring += str(model.species[rxn['reactants'][0]])
+#             for i in range(1, len(rxn['reactants'])):
+#                 outstring += ' + ' + str(model.species[rxn['reactants'][i]])
+#         outstring += ' >> '
+#         if len(rxn['products']) == 0:
+#             outstring += 'None'
+#         else:
+#             outstring += str(model.species[rxn['products'][0]])
+#             for i in range(1, len(rxn['products'])):
+#                 outstring += ' + ' + str(model.species[rxn['products'][i]])
+#         print(outstring)
+# quit()
+
+# print('monomers %d' % len(model.monomers))
+# print('rules %d' % len(model.rules))
+# print('species %d' % len(model.species))
+# print('reactions %d' % len(model.reactions))
+
+for i, sp in enumerate(model.species):
+    print('%d: %s' % (i, sp))
+
+quit()
+
 ##########
 # Debugging (keep for now)
 # for rxn in model.reactions:
