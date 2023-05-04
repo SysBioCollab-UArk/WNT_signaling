@@ -58,7 +58,7 @@ Initial(Apc(axin=None, aa15=None, aa20=None, state='u'), Apc_0)
 Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'), Bcat_0)
 Initial(Btrcp(b=None), Btrcp_0)
 Initial(Li(gsk3=None), Li_0)
-Initial(Gli2(btrcp=None, state='ub', g_pthlh=None, loc='cyt'), Gli2_0)
+Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
 Initial(gGli2(tcf4=None, smad3=None), gGli2_0)
 Initial(Wnt(rec=None), Wnt_0)
 Initial(Tcf4(g=None, bcat=None), Tcf4_0)
@@ -526,10 +526,10 @@ sim = ScipyOdeSimulator(model, tspan, verbose=True)
 # print('species %d' % len(model.species))
 # print('reactions %d' % len(model.reactions))
 
-for i, sp in enumerate(model.species):
-    print('%d: %s' % (i, sp))
-
-quit()
+# for i, sp in enumerate(model.species):
+#     print('%d: %s' % (i, sp))
+#
+# quit()
 
 ##########
 # Debugging (keep for now)
@@ -565,8 +565,8 @@ if destcpx_rules:
         gsk3_activity = np.array(gsk3_activity)
         gsk3_activity2 = np.array(gsk3_activity2)
 
-        plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
-        plt.plot(Li_conc, gsk3_activity2/gsk3_activity2[0], 'o', mfc='none', label="kf=%g" % kf)
+        p=plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
+        plt.plot(Li_conc, gsk3_activity2/gsk3_activity2[0], 'o', color=p[0].get_color(), mfc='none', label="kf=%g" % kf)
 
     plt.xlabel('Li concentration')
     plt.ylabel('GSK3 activity')

@@ -44,7 +44,7 @@ Parameter('Dkk1_0', 100)
 Parameter('Wif1_0', 0)
 
 Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
-Initial(Gli2(btrcp=None,state='ub',g_pthlh=None,loc='cyt'), Gli2_0)
+Initial(Gli2(btrcp=None,state='x',g_pthlh=None,loc='cyt'), Gli2_0)
 Initial(gGli2(tcf4=None,smad3=None), gGli2_0)
 Initial(Wnt(rec=None), Wnt_0)
 Initial(Btrcp(b=None), Btrcp_0)
