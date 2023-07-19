@@ -11,6 +11,7 @@ Model()
 Monomer('Axin', ['bcat', 'gsk3', 'ck1a', 'apc'])
 Monomer('Gsk3', ['axin', 'lithium', 'dvl'])  # added dvl component
 Monomer('Ck1a', ['axin'])
+#TODO: Should we have 2 Apc/Axin binding sites instead of 3?
 Monomer('Apc', ['axin', 'aa15', 'aa20', 'state'], {'state': ['u', 'p1', 'p2']})
 Monomer('Bcat', ['top', 'bottom', 'nterm', 'state', 'tcf4', 'loc'],  # Added tcf4 and loc components
         {'state': ['x', 'ub'], 'nterm': ['u', 'p1', 'p2'], 'loc': ['cyt', 'nuc']})  # p1 by ck1a, p2 by gsk3
@@ -50,12 +51,21 @@ Parameter('Wif1_0', 0)
 Parameter('Ck1a_0', 50)
 Parameter('Li_0', 0)
 
-
+#TODO: Make sure initial species are the same as in WNT_model.py
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
 Initial(Gsk3(axin=None, lithium=None, dvl=None), Gsk3_0)
 Initial(Ck1a(axin=None), Ck1a_0)
 Initial(Apc(axin=None, aa15=None, aa20=None, state='u'), Apc_0)
-Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'), Bcat_0)
+# Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'), Bcat_0)
+#TODO: Work on initial condition below
+
+# Initial(Bcat(tcf4=None, top=1, bottom=2, state='x', loc='cyt', nterm='u') %
+#         Axin(bcat=1, gsk3=3, ck1a=None, apc=4) % Apc(axin=4, aa15=) Bcat_0)
+# Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
+# Initial(Gli2(btrcp=None,state='x',g_pthlh=None,loc='cyt'), Gli2_0)
+# Initial(gGli2(tcf4=None,smad3=None), gGli2_0)
+# Initial(Wnt(rec=None), Wnt_0)
+# Initial(Btrcp(b=None), Btrcp_0)
 Initial(Btrcp(b=None), Btrcp_0)
 Initial(Li(gsk3=None), Li_0)
 Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
@@ -69,6 +79,20 @@ Initial(gPthlh(gli2=None, tcf4=None), gPthlh_0)
 # Initial(Dvl(rec=1,gsk3=None) % Rec(dvl=1,wnt=2) % Wnt(rec=2), Parameter('Dvl_rec_wnt_0', 50))
 Initial(Dkk1(rec=None), Dkk1_0)
 Initial(Wif1(wnt=None), Wif1_0)
+
+
+# Initial(Tcf4(g_gli2=None, g_pthlh=None, bcat=None), Tcf4_0)
+# Initial(Smad3(g_gli2=None), Smad3_0)
+# Initial(Gsk3b(bcat=None,dvl=None), Gsk3b_0)
+# Initial(Axin(bcat=None),Axin_0)
+# Initial(Rec(wnt=None,dvl=None), Rec_0)
+# Initial(Dvl(rec=None,gsk3b=None), Dvl_0)
+# Initial(gPthlh(gli2=None,tcf4=None), gPthlh_0)
+# Initial(Apc(bcat=None), Apc_0)
+# # Initial(Dvl(rec=1,gsk3b=None) % Rec(dvl=1,wnt=2) % Wnt(rec=2), Parameter('Dvl_rec_wnt_0', 50))
+# Initial(Dkk1(rec=None), Dkk1_0)
+# Initial(Wif1(wnt=None), Wif1_0)
+
 
 # observables
 # Observable('Axin_tot', Axin())   # total amount of axin
@@ -219,7 +243,7 @@ Rule('btrcp_binds_bcat',
      Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) %
      Btrcp(b=2),
      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
-
+'''
 # Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
 Rule('Bcat_ubiq',
      Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='x') % Apc(aa20=1) % Btrcp(b=2) >>
@@ -228,7 +252,7 @@ Rule('Bcat_ubiq',
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) >> Btrcp(b=None),
      k_bcat_deg)
-
+'''
 
 def create_destcpx_rules(create=True):
     if not create:
@@ -455,9 +479,8 @@ def create_wntmodel_rules(create=True):
     Rule('Gli2_phospo', Gli2(state='x', loc='cyt', btrcp=None) | Gli2(state='p', loc='cyt', btrcp=None), *k_gli2_phos)
 
     # Phopho-Gli2 translocates to nucleus
-    Rule('Gli2_to_nuc', Gli2(state='p', loc='cyt') >> Gli2(state='p', loc='nuc'), k_gli2_nuc[0])
-    Rule('Gli2_to_cyt', Gli2(state='p', g_pthlh=None, loc='nuc') >> Gli2(state='p', g_pthlh=None, loc='cyt'),
-         k_gli2_nuc[1])
+    Rule('Gli2_to_nuc', Gli2(state='p', g_pthlh=None, loc='cyt') | Gli2(state='p', g_pthlh=None, loc='nuc'), *k_gli2_nuc)
+
 
     # Gli2 binds BTRCP
     Rule('Gli2_binds_BTRCP', Gli2(state='x', loc='cyt', btrcp=None) + Btrcp(b=None) |
@@ -488,9 +511,10 @@ def create_wntmodel_rules(create=True):
     return True
 
 
-destcpx_rules = create_destcpx_rules(create=True)
-wntmodel_rules = create_wntmodel_rules(create=True)
-
+destcpx_rules = create_destcpx_rules(create=False)
+wntmodel_rules = create_wntmodel_rules(create=False)
+print(destcpx_rules)
+print(wntmodel_rules)
 # idx = [17, 28, 32, 33, 38]
 # for i, rule in enumerate(model.rules):
 #     if i+1 in idx:
@@ -521,11 +545,19 @@ sim = ScipyOdeSimulator(model, tspan, verbose=True)
 #         print(outstring)
 # quit()
 
-# print('monomers %d' % len(model.monomers))
-# print('rules %d' % len(model.rules))
-# print('species %d' % len(model.species))
-# print('reactions %d' % len(model.reactions))
-
+print('monomers %d' % len(model.monomers))
+print('rules %d' % len(model.rules))
+print('species %d' % len(model.species))
+print('reactions %d' % len(model.reactions))
+# print(model.monomers)
+# names = []
+# for rule in model.rules:
+#     names.append(rule.name)
+# # names = [n.lower() for n in names]
+# names.sort()
+# for name in names:
+#     print(model.rules[name])
+quit()
 # for i, sp in enumerate(model.species):
 #     print('%d: %s' % (i, sp))
 #

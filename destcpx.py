@@ -268,6 +268,18 @@ if __name__ == '__main__':
      # Comparing to Fig. 1(a) of Stambolic et al. (1996): doi:10.1016/s0960-9822(02)70790-2
      tspan = np.linspace(0, 40, 101)
      sim = ScipyOdeSimulator(model, tspan, verbose=False)
+     # print('monomers %d' % len(model.monomers))
+     # print('rules %d' % len(model.rules))
+     # print('species %d' % len(model.species))
+     # print('reactions %d' % lenw(model.reactions))
+     names = []
+     for rule in model.rules:
+         names.append(rule.name)
+     names = [n.lower() for n in names]
+     names.sort()
+     for name in names:
+         print(name)
+     quit()
      result = sim.run()
 
      # plt.plot(tspan, result.observables['GSK3_activity'], lw=2, label='GSK3_activity')

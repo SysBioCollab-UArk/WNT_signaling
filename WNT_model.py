@@ -140,7 +140,7 @@ k_wif_wnt = [
 Rule('Bcat_binds_btrcp', Bcat(gsk3b=1,apc=2,btrcp=None,state='x',loc='cyt') % Gsk3b(bcat=1) % Apc(bcat=2) + Btrcp(b=None) | \
        Bcat(gsk3b=None,apc=None,btrcp=3,state='x',loc='cyt') % Btrcp(b=3) + Gsk3b(bcat=None) + Apc(bcat=None), \
        kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
-
+'''
 #Beta Catenin Ubiquitination
 #k_bcat_ubiq
 Rule('Bcat_Ubiq', Bcat(gsk3b=None,apc=None,btrcp=3,state='x',loc='cyt') % Btrcp(b=3) >>
@@ -211,7 +211,7 @@ Rule('Pthrp_deg', Pthrp() >> None, k_pthrp_deg)
 Rule('Gli2_phospo', Gli2(state='x', loc='cyt', btrcp=None) | Gli2(state='p', loc='cyt', btrcp=None), *k_gli2_phos)
 
 # Phopho-Gli2 translocates to nucleus
-Rule('Gli2_to_nuc', Gli2(state='p', loc='cyt') | Gli2(state='p', loc='nuc'), *k_gli2_nuc)
+Rule('Gli2_to_nuc', Gli2(state='p', g_pthlh=None, loc='cyt') | Gli2(state='p', g_pthlh=None, loc='nuc'), *k_gli2_nuc)
 
 # Gli2 binds BTRCP
 Rule('Gli2_binds_BTRCP', Gli2(state='x', loc='cyt', btrcp=None) + Btrcp(b=None) | \
@@ -238,11 +238,24 @@ Rule('dkk1_binds_rec', Dkk1(rec=None) + Rec(wnt=None) | Dkk1(rec=1) % Rec(wnt=1)
 
 # WIF binds WNT3A
 Rule('wif_binds_wnt', Wif1(wnt=None) + Wnt(rec=None) | Wif1(wnt=1) % Wnt(rec=1), *k_wif_wnt)
-
+'''
 if __name__ == '__main__':
      # run simulation
      tspan=np.linspace(0,40,101)
      sim=ScipyOdeSimulator(model,tspan,verbose=True)
+     print('monomers %d' % len(model.monomers))
+     print('rules %d' % len(model.rules))
+     print('species %d' % len(model.species))
+     print('reactions %d' % len(model.reactions))
+     quit()
+     names=[]
+     for rule in model.rules:
+          names.append(rule.name)
+     # names=[n.lower() for n in names]
+     names.sort()
+     for name in names:
+          print(model.rules[name])
+     quit()
      traj=sim.run()
      fig, axs=plt.subplots(nrows=4,ncols=2,figsize=(6.4,9.6))
      row=0
