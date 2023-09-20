@@ -11,7 +11,7 @@ from pysb.bng import generate_equations
 # expands into 32 species + 63 reactions
 
 # TODO: Modify rate constants so that more Bcat is degraded (very little is being degraded right now, 02/18/22)
-
+# TODO: Should 'lithium' be a separate binding site on GSK3 or should lithium bind to the axin binding site?
 Model()
 
 # monomer
@@ -123,18 +123,23 @@ Parameter('kr_gsk3_li', 0.01)
 # Axin binding rules
 # We require beta-catenin to NOT be bound for these binding event to occur
 # We assume beta-catenin can only bind when all three of Ck1a, Gsk3, and Apc are bound
-Rule('axin_binds_ck1a', Axin(bcat=None, ck1a=None) + Ck1a(axin=None) >> Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
-     kf_axin_ck1a)
-Rule('axin_binds_gsk3', Axin(bcat=None, gsk3=None) + Gsk3(axin=None) >> Axin(bcat=None, gsk3=1) % Gsk3(axin=1),
-     kf_axin_gsk3)
-Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None) >> Axin(bcat=None, apc=1) % Apc(axin=1),
-     kf_axin_apc)
+Rule('axin_binds_ck1a', Axin(bcat=None, ck1a=None) + Ck1a(axin=None) |
+     Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
+     kf_axin_ck1a, kr_axin_ck1a)
+Rule('axin_binds_gsk3', Axin(bcat=None, gsk3=None) + Gsk3(axin=None) |
+     Axin(bcat=None, gsk3=1) % Gsk3(axin=1),
+     kf_axin_gsk3, kr_axin_gsk3)
+Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None, aa15=None, aa20=None, state='u') |
+     Axin(bcat=None, apc=1) % Apc(axin=1, aa15=None, aa20=None, state='u'),
+     kf_axin_apc, kr_axin_apc)
+
 
 # Axin unbinding rules
 # We only allow Ck1a, Gsk3, and Apc to unbind if at least one of the others is not bound. If all three are
 # bound we assume the complex never breaks apart
 
 # Ck1a unbinds
+'''
 Rule('axin_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=None, apc=None) % Ck1a(axin=1) >>
      Axin(bcat=None, ck1a=None, gsk3=None, apc=None) + Ck1a(axin=None), kr_axin_ck1a)
 
@@ -163,17 +168,30 @@ Rule('axin_gsk3_unbinds_apc', Axin(bcat=None, apc=1, gsk3=ANY, ck1a=None) % Apc(
 
 Rule('axin_ck1a_unbinds_apc', Axin(bcat=None, apc=1, gsk3=None, ck1a=ANY) % Apc(axin=1) >>
      Axin(bcat=None, apc=None, gsk3=None, ck1a=ANY) + Apc(axin=None), kr_axin_apc)
-
+'''
 # Bcat into dest comp
 # Here, we are requiring that the aa20 site of APC is NOT bound to another beta-catenin molecule in order for
 # beta-catenin to bind to Axin
 # NOTE: we are only allowing Bcat to bind to Axin if APC is unphosphorylated (this completes the loop and allows
 # the destruction complex to be recycled)
 Rule('Bcat_binds_dtcpx',
-     Bcat(top=None, bottom=None, nterm='u') +
-     Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, state='u') |
-     Bcat(top=2, bottom=None, nterm='u') % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, state='u'),
+     Bcat(top=None, bottom=None, nterm='u', state='x') +
+     Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, aa15=None, state='u') |
+     Bcat(top=2, bottom=3, nterm='u', state='x') %
+     Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, aa15=3, state='u'),
      kf_bcat_dtcpx, kr_bcat_dtcpx)
+
+generate_equations(model)
+for sp in model.species:
+    print(sp)
+tspan = np.linspace(0, 5, 101)
+sim = ScipyOdeSimulator(model, tspan, verbose=False)
+x = sim.run()
+for i in range(len(model.species)):
+    plt.plot(tspan, x.all["__s%d" % i], lw=2, label="species %d" % i)
+plt.legend(loc=0)
+plt.show()
+quit()
 
 # We think Bcat can be phosphorylated and dephosphorylated when bound to Axin, whether it's bound to APC or not
 
@@ -234,8 +252,8 @@ Rule('Bcat_ubiq',
 
 # Apc release bcat by dephos
 Rule('apc_release_bcat',
-     Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1) % Btrcp(bcat=2) >>
-     Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) + Apc(aa20=None), k_bcat_release)
+     Bcat(top=1, bottom=2, state='ub') % Apc(aa20=1, state='p2') % Btrcp(bcat=2) >>
+     Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) + Apc(aa20=None, state='u'), k_bcat_release)
 
 # Bcat degraded by proteosome
 Rule('bcat_degradation', Bcat(top=None, bottom=2, state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
