@@ -234,9 +234,9 @@ k_wif_wnt = [
 
 # Common Rules
 Rule('btrcp_binds_bcat',
-     Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2') %
+     Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2', state='x') %
      Apc(aa15=None, aa20=1, state='p2', axin=ANY) + Btrcp(b=None) |
-     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') %
+     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2', state='x') %
      Apc(aa15=None, aa20=1, state='p2', axin=ANY) % Btrcp(b=2),
      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
 
@@ -333,9 +333,11 @@ def create_destcpx_rules(create=True):
     # the destruction complex to be recycled)
     Rule('Bcat_binds_dtcpx',
          Bcat(top=None, bottom=None, tcf4=None, loc='cyt', nterm='u') +
-         Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa15=None, aa20=None, state='u') |
-         Bcat(top=2, bottom=3, tcf4=None, loc='cyt', nterm='u')
-         % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa15=3, aa20=None, state='u'),
+         Axin(bcat=None, ck1a=ANY, gsk3=2, apc=1) % Apc(axin=1, aa15=None, aa20=None, state='u') %
+         Gsk3(axin=2, lithium=None, dvl=None) |
+         Bcat(top=3, bottom=4, tcf4=None, loc='cyt', nterm='u') %
+         Axin(bcat=3, ck1a=ANY, gsk3=2, apc=1) % Apc(axin=1, aa15=4, aa20=None, state='u') %
+         Gsk3(axin=2, lithium=None, dvl=None),
          kf_bcat_dtcpx, kr_bcat_dtcpx)
 
     # We think Bcat can be phosphorylated and dephosphorylated when bound to Axin, whether it's bound to APC or not
@@ -419,7 +421,7 @@ def create_destcpx_rules(create=True):
 
     # Apc release bcat by dephos
     Rule('apc_release_bcat',
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(b=2) >>
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) % Apc(aa20=1) >>
          Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) + Apc(aa20=None),
          k_bcat_release)
 
@@ -563,8 +565,8 @@ def create_wntmodel_rules(create=True):
 
     # DVL binds WNT-bound receptor
     Rule('dvl_binds_wnt_rec',
-         Dvl(rec=None) + Rec(wnt=1, dvl=None) % Wnt(rec=1) |
-         Dvl(rec=2) % Rec(wnt=1, dvl=2) % Wnt(rec=1),
+         Dvl(rec=None, gsk3=None) + Rec(wnt=1, dvl=None) % Wnt(rec=1) |
+         Dvl(rec=2, gsk3=None) % Rec(wnt=1, dvl=2) % Wnt(rec=1),
          *k_dvl_rec)
 
     # DVL binds unbound receptor (only happens for high rigidity)
