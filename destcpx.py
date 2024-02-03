@@ -175,17 +175,17 @@ Rule('bcat_unp2',
 
 Rule('lithium_binds_GSK3', Gsk3(lithium=None) + Li(gsk3=None) | Gsk3(lithium=1) % Li(gsk3=1), kf_gsk3_li, kr_gsk3_li)
 
-generate_equations(model)
-for sp in model.species:
-    print(sp)
-# tspan = np.linspace(0, 5, 101)
-# sim = ScipyOdeSimulator(model, tspan, verbose=False)
-# x = sim.run()
-# for i in range(len(model.species)):
-#     plt.plot(tspan, x.all["__s%d" % i], lw=2, label="species %d" % i)
-# plt.legend(loc=0)
-# plt.show()
-quit()
+# generate_equations(model)
+# for sp in model.species:
+#     print(sp)
+# # tspan = np.linspace(0, 5, 101)
+# # sim = ScipyOdeSimulator(model, tspan, verbose=False)
+# # x = sim.run()
+# # for i in range(len(model.species)):
+# #     plt.plot(tspan, x.all["__s%d" % i], lw=2, label="species %d" % i)
+# # plt.legend(loc=0)
+# # plt.show()
+# quit()
 
 # TODO start from here
 # Bcat binds to aa15 site of APC (it is assumed phosphorylation state of Bcat does not affect binding)

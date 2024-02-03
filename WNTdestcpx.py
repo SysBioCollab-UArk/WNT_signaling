@@ -59,13 +59,10 @@ Initial(Apc(axin=None, aa15=None, aa20=None, state='u'), Apc_0)
 # Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'), Bcat_0)
 #TODO: Work on initial condition below
 
-# Initial(Bcat(tcf4=None, top=1, bottom=2, state='x', loc='cyt', nterm='u') %
-#         Axin(bcat=1, gsk3=3, ck1a=None, apc=4) % Apc(axin=4, aa15=) Bcat_0)
+Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'), Bcat_0)
+# % Axin(bcat=1, gsk3=3, ck1a=5, apc=4) % Apc(aa20=4, aa15=2) %
+        # Gsk3(axin=3, lithium=None, dvl=None) % Ck1a(axin=5), Bcat_0)
 # Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
-# Initial(Gli2(btrcp=None,state='x',g_pthlh=None,loc='cyt'), Gli2_0)
-# Initial(gGli2(tcf4=None,smad3=None), gGli2_0)
-# Initial(Wnt(rec=None), Wnt_0)
-# Initial(Btrcp(b=None), Btrcp_0)
 Initial(Btrcp(b=None), Btrcp_0)
 Initial(Li(gsk3=None), Li_0)
 Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
@@ -418,9 +415,12 @@ def create_wntmodel_rules(create=True):
          Dvl(gsk3=4, rec=ANY) + Apc(aa15=None), k_bcat_apc)
 
     # Beta catenin released from destruction complex and DVL
+    # TODO Added bottom=None into the rule below. Didn't reduce the number of reactions. Not sure why.
+    # TODO Added nterm='u' in the product, which reduces the number of species and reactions.
     Rule('Bcat_release',
-         Bcat(top=1, tcf4=None, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) >>
-         Bcat(top=None, tcf4=None, loc='cyt') + Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) +
+         Bcat(top=1, bottom=None, tcf4=None, nterm=WILD, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) %
+         Dvl(gsk3=4, rec=ANY) >>
+         Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt') + Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) +
          Dvl(gsk3=None, rec=ANY), k_bcat_release)
 
     # Beta catenin translocation to the nucleus
@@ -511,8 +511,8 @@ def create_wntmodel_rules(create=True):
     return True
 
 
-destcpx_rules = create_destcpx_rules(create=False)
-wntmodel_rules = create_wntmodel_rules(create=False)
+destcpx_rules = create_destcpx_rules(create=True)
+wntmodel_rules = create_wntmodel_rules(create=True)
 print(destcpx_rules)
 print(wntmodel_rules)
 # idx = [17, 28, 32, 33, 38]
