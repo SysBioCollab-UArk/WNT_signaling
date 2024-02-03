@@ -46,10 +46,10 @@ Parameter('Rec_0', 100)
 Parameter('Dvl_0', 50)
 Parameter('gPthlh_0', 1)
 Parameter('Apc_0', 50)  # 0
-Parameter('Dkk1_0', 100)
-Parameter('Wif1_0', 0)
+# Parameter('Dkk1_0', 100)
+# Parameter('Wif1_0', 0)
 Parameter('Ck1a_0', 50)
-Parameter('Li_0', 0)
+# Parameter('Li_0', 0)
 
 #TODO: Make sure initial species are the same as in WNT_model.py
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
@@ -64,7 +64,7 @@ Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'),
         # Gsk3(axin=3, lithium=None, dvl=None) % Ck1a(axin=5), Bcat_0)
 # Initial(Bcat(apc=1,gsk3b=2,btrcp=None,axin=4,tcf4=None,state='x',loc='cyt') % Apc(bcat=1) % Gsk3b(bcat=2,dvl=None) % Axin(bcat=4), Bcat_0)
 Initial(Btrcp(b=None), Btrcp_0)
-Initial(Li(gsk3=None), Li_0)
+# Initial(Li(gsk3=None), Li_0)
 Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
 Initial(gGli2(tcf4=None, smad3=None), gGli2_0)
 Initial(Wnt(rec=None), Wnt_0)
@@ -74,8 +74,8 @@ Initial(Rec(wnt=None, dvl=None), Rec_0)
 Initial(Dvl(rec=None, gsk3=None), Dvl_0)
 Initial(gPthlh(gli2=None, tcf4=None), gPthlh_0)
 # Initial(Dvl(rec=1,gsk3=None) % Rec(dvl=1,wnt=2) % Wnt(rec=2), Parameter('Dvl_rec_wnt_0', 50))
-Initial(Dkk1(rec=None), Dkk1_0)
-Initial(Wif1(wnt=None), Wif1_0)
+# Initial(Dkk1(rec=None), Dkk1_0)
+# Initial(Wif1(wnt=None), Wif1_0)
 
 
 # Initial(Tcf4(g_gli2=None, g_pthlh=None, bcat=None), Tcf4_0)
@@ -223,8 +223,8 @@ k_dvl_rec = [
      Parameter('kf_dvl_rec', 10),
      Parameter('kr_dvl_rec', 1)]
 k_dvl_rec_rigid = [
-     Parameter('kf_dvl_rec_rigid', 100),
-     Parameter('kr_dvl_rec_rigid', 1)]
+     Parameter('kf_dvl_rec_rigid', 0),  # 100),
+     Parameter('kr_dvl_rec_rigid', 0)]  # 1)]
 k_dkk1_rec = [
      Parameter('kf_dkk1_rec', 1),
      Parameter('kr_dkk1_rec', 1)]
@@ -232,37 +232,46 @@ k_wif_wnt = [
      Parameter('kf_wif_wnt', 1),
      Parameter('kr_wif_wnt', 1)]
 
-#Common Rules
-
+# Common Rules
 Rule('btrcp_binds_bcat',
-     Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=None) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) +
-     Btrcp(b=None) |
-     Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=2) % Apc(state='p2', aa20=1, aa15=None, axin=ANY) %
-     Btrcp(b=2),
+     Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2') %
+     Apc(aa15=None, aa20=1, state='p2', axin=ANY) + Btrcp(b=None) |
+     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') %
+     Apc(aa15=None, aa20=1, state='p2', axin=ANY) % Btrcp(b=2),
      kf_btrcp_binds_bcat, kr_btrcp_binds_bcat)
-'''
-# Beta catenin ubiquitination and release from destruction complex (in the cytoplasm)
+
+# Beta catenin ubiquitination
 Rule('Bcat_ubiq',
      Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='x') % Apc(aa20=1) % Btrcp(b=2) >>
-     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(b=2), k_bcat_ubiq)
+     Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(b=2),
+     k_bcat_ubiq)
 
 # Bcat degraded by proteosome
-Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) >> Btrcp(b=None),
+Rule('bcat_degradation',
+     Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) >> Btrcp(b=None),
      k_bcat_deg)
-'''
+
 
 def create_destcpx_rules(create=True):
     if not create:
         return False
+
     # Axin binding rules
     # We require beta-catenin to NOT be bound for these binding event to occur
     # We assume beta-catenin can only bind when all three of Ck1a, Gsk3, and Apc are bound
-    Rule('axin_binds_ck1a', Axin(bcat=None, ck1a=None) + Ck1a(axin=None) >> Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
+    Rule('axin_binds_ck1a',
+         Axin(bcat=None, ck1a=None) + Ck1a(axin=None) >>
+         Axin(bcat=None, ck1a=1) % Ck1a(axin=1),
          kf_axin_ck1a)
+
     Rule('axin_binds_gsk3',
-         Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) >> Axin(bcat=None, gsk3=1) % Gsk3(axin=1, dvl=None),
+         Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) >>
+         Axin(bcat=None, gsk3=1) % Gsk3(axin=1, dvl=None),
          kf_axin_gsk3)
-    Rule('axin_binds_apc', Axin(bcat=None, apc=None) + Apc(axin=None) >> Axin(bcat=None, apc=1) % Apc(axin=1),
+
+    Rule('axin_binds_apc',
+         Axin(bcat=None, apc=None) + Apc(axin=None) >>
+         Axin(bcat=None, apc=1) % Apc(axin=1),
          kf_axin_apc)
 
     # Axin unbinding rules
@@ -270,34 +279,52 @@ def create_destcpx_rules(create=True):
     # bound we assume the complex never breaks apart
 
     # Ck1a unbinds
-    Rule('axin_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=None, apc=None) % Ck1a(axin=1) >>
-         Axin(bcat=None, ck1a=None, gsk3=None, apc=None) + Ck1a(axin=None), kr_axin_ck1a)
+    Rule('axin_unbinds_ck1a',
+         Axin(bcat=None, ck1a=1, gsk3=None, apc=None) % Ck1a(axin=1) >>
+         Axin(bcat=None, ck1a=None, gsk3=None, apc=None) + Ck1a(axin=None),
+         kr_axin_ck1a)
 
-    Rule('axin_gsk3_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=ANY, apc=None) % Ck1a(axin=1) >>
-         Axin(bcat=None, ck1a=None, gsk3=ANY, apc=None) + Ck1a(axin=None), kr_axin_ck1a)
+    Rule('axin_gsk3_unbinds_ck1a',
+         Axin(bcat=None, ck1a=1, gsk3=ANY, apc=None) % Ck1a(axin=1) >>
+         Axin(bcat=None, ck1a=None, gsk3=ANY, apc=None) + Ck1a(axin=None),
+         kr_axin_ck1a)
 
-    Rule('axin_apc_unbinds_ck1a', Axin(bcat=None, ck1a=1, gsk3=None, apc=ANY) % Ck1a(axin=1) >>
-         Axin(bcat=None, ck1a=None, gsk3=None, apc=ANY) + Ck1a(axin=None), kr_axin_ck1a)
+    Rule('axin_apc_unbinds_ck1a',
+         Axin(bcat=None, ck1a=1, gsk3=None, apc=ANY) % Ck1a(axin=1) >>
+         Axin(bcat=None, ck1a=None, gsk3=None, apc=ANY) + Ck1a(axin=None),
+         kr_axin_ck1a)
 
     # Gsk3 unbinds
-    Rule('axin_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=None, apc=None) % Gsk3(axin=1, dvl=None) >>
-         Axin(bcat=None, gsk3=None, ck1a=None, apc=None) + Gsk3(axin=None,dvl=None), kr_axin_gsk3)
+    Rule('axin_unbinds_gsk3',
+         Axin(bcat=None, gsk3=1, ck1a=None, apc=None) % Gsk3(axin=1, dvl=None) >>
+         Axin(bcat=None, gsk3=None, ck1a=None, apc=None) + Gsk3(axin=None,dvl=None),
+         kr_axin_gsk3)
 
-    Rule('axin_ck1a_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=ANY, apc=None) % Gsk3(axin=1,dvl=None) >>
-         Axin(bcat=None, gsk3=None, ck1a=ANY, apc=None) + Gsk3(axin=None,dvl=None), kr_axin_gsk3)
+    Rule('axin_ck1a_unbinds_gsk3',
+         Axin(bcat=None, gsk3=1, ck1a=ANY, apc=None) % Gsk3(axin=1,dvl=None) >>
+         Axin(bcat=None, gsk3=None, ck1a=ANY, apc=None) + Gsk3(axin=None,dvl=None),
+         kr_axin_gsk3)
 
-    Rule('axin_apc_unbinds_gsk3', Axin(bcat=None, gsk3=1, ck1a=None, apc=ANY) % Gsk3(axin=1,dvl=None) >>
-         Axin(bcat=None, gsk3=None, ck1a=None, apc=ANY) + Gsk3(axin=None,dvl=None), kr_axin_gsk3)
+    Rule('axin_apc_unbinds_gsk3',
+         Axin(bcat=None, gsk3=1, ck1a=None, apc=ANY) % Gsk3(axin=1,dvl=None) >>
+         Axin(bcat=None, gsk3=None, ck1a=None, apc=ANY) + Gsk3(axin=None,dvl=None),
+         kr_axin_gsk3)
 
     # APC unbinds
-    Rule('axin_unbinds_apc', Axin(bcat=None, apc=1, gsk3=None, ck1a=None) % Apc(axin=1) >>
-         Axin(bcat=None, apc=None, gsk3=None, ck1a=None) + Apc(axin=None), kr_axin_apc)
+    Rule('axin_unbinds_apc',
+         Axin(bcat=None, apc=1, gsk3=None, ck1a=None) % Apc(axin=1) >>
+         Axin(bcat=None, apc=None, gsk3=None, ck1a=None) + Apc(axin=None),
+         kr_axin_apc)
 
-    Rule('axin_gsk3_unbinds_apc', Axin(bcat=None, apc=1, gsk3=ANY, ck1a=None) % Apc(axin=1) >>
-         Axin(bcat=None, apc=None, gsk3=ANY, ck1a=None) + Apc(axin=None), kr_axin_apc)
+    Rule('axin_gsk3_unbinds_apc',
+         Axin(bcat=None, apc=1, gsk3=ANY, ck1a=None) % Apc(axin=1) >>
+         Axin(bcat=None, apc=None, gsk3=ANY, ck1a=None) + Apc(axin=None),
+         kr_axin_apc)
 
-    Rule('axin_ck1a_unbinds_apc', Axin(bcat=None, apc=1, gsk3=None, ck1a=ANY) % Apc(axin=1) >>
-         Axin(bcat=None, apc=None, gsk3=None, ck1a=ANY) + Apc(axin=None), kr_axin_apc)
+    Rule('axin_ck1a_unbinds_apc',
+         Axin(bcat=None, apc=1, gsk3=None, ck1a=ANY) % Apc(axin=1) >>
+         Axin(bcat=None, apc=None, gsk3=None, ck1a=ANY) + Apc(axin=None),
+         kr_axin_apc)
 
     # Bcat into dest comp
     # Here, we are requiring that the aa20 site of APC is NOT bound to another beta-catenin molecule in order for
@@ -306,9 +333,9 @@ def create_destcpx_rules(create=True):
     # the destruction complex to be recycled)
     Rule('Bcat_binds_dtcpx',
          Bcat(top=None, bottom=None, tcf4=None, loc='cyt', nterm='u') +
-         Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa20=None, state='u') |
-         Bcat(top=2, bottom=None, tcf4=None, loc='cyt', nterm='u') % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) %
-         Apc(axin=1, aa20=None, state='u'),
+         Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa15=None, aa20=None, state='u') |
+         Bcat(top=2, bottom=3, tcf4=None, loc='cyt', nterm='u')
+         % Axin(bcat=2, ck1a=ANY, gsk3=ANY, apc=1) % Apc(axin=1, aa15=3, aa20=None, state='u'),
          kf_bcat_dtcpx, kr_bcat_dtcpx)
 
     # We think Bcat can be phosphorylated and dephosphorylated when bound to Axin, whether it's bound to APC or not
@@ -317,44 +344,62 @@ def create_destcpx_rules(create=True):
     # Therefore, we don't need to explicitly include those three sites in the rule
     # Also, dephosphorylation (reverse part of the rule) is implicitly modeled as due to PP2A
     Rule('bcat_p_ck1a',
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='u') % Axin(bcat=1) | Bcat(top=1, tcf4=None, loc='cyt', nterm='p1') %
-         Axin(bcat=1), kf_bcat_phos_ck1a, k_dephos)  # ck1a phos first
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='u') % Axin(bcat=1) % Apc(aa15=2) |
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1) % Apc(aa15=2),
+         kf_bcat_phos_ck1a, k_dephos)  # ck1a phos first
 
+    # GSK3 can't be bound to DLV or Li
     Rule('bcat_p_gsk3',
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, lithium=None, dvl=None) >>
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, lithium=None, dvl=None),
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p1') %
+         Axin(bcat=1, gsk3=3) % Apc(aa15=2) % Gsk3(axin=3, lithium=None, dvl=None) >>
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') %
+         Axin(bcat=1, gsk3=3) % Apc(aa15=2) % Gsk3(axin=3, lithium=None, dvl=None),
          kf_bcat_phos_gsk3)  # then gsk3b phos
 
     # Don't restrict dephosphorylation of Bcat to case where Gsk3 is not bound to lithium
     # (i.e., Li could bind after phosphorylation of Bcat by Gsk3. Should be allowed to desphosphorylate in that case)
-    Rule('bcat_unp2', Bcat(top=1, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None) >>
-         Bcat(top=1, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None), k_dephos)
+    Rule('bcat_unp2',
+         Bcat(top=1, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None) >>
+         Bcat(top=1, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None),
+         k_dephos)
 
-    Rule('lithium_binds_GSK3', Gsk3(lithium=None, dvl=None) + Li(gsk3=None) | Gsk3(lithium=1, dvl=None) % Li(gsk3=1), kf_gsk3_li,
-         kr_gsk3_li)
+    Rule('lithium_binds_GSK3',
+         Gsk3(lithium=None, dvl=None) + Li(gsk3=None) | Gsk3(lithium=1, dvl=None) % Li(gsk3=1),
+         kf_gsk3_li, kr_gsk3_li)
 
-    # Bcat binds to aa15 site of APC (it is assumed phosphorylation state of Bcat does not affect binding)
-    Rule('Bcat_binds_aa15', Bcat(top=1, bottom=None, tcf4=None, loc='cyt') % Axin(bcat=1, apc=2) % Apc(axin=2, state='u', aa15=None) |
-         Bcat(top=1, bottom=3, tcf4=None, loc='cyt') % Axin(bcat=1, apc=2) % Apc(axin=2, state='u', aa15=3), kf_bcat_apc, kr_bcat_apc)
+    # # Bcat binds to aa15 site of APC (it is assumed phosphorylation state of Bcat does not affect binding)
+    # Rule('Bcat_binds_aa15',
+    #      Bcat(top=1, bottom=None, tcf4=None, loc='cyt') % Axin(bcat=1, apc=2) % Apc(axin=2, state='u', aa15=None) |
+    #      Bcat(top=1, bottom=3, tcf4=None, loc='cyt') % Axin(bcat=1, apc=2) % Apc(axin=2, state='u', aa15=3),
+    #      kf_bcat_apc, kr_bcat_apc)
 
     # APC phosphorylated by ck1a and gsk3
     # Dephosphorylation is assumed to be due to PP2A (implicit)
-    Rule('apc_p_ck1a', Bcat(bottom=1, tcf4=None, loc='cyt', nterm='p2') % Apc(aa15=1, state='u', axin=ANY) % Ck1a() % Gsk3(dvl=None) >>
-         Bcat(bottom=1, tcf4=None, loc='cyt', nterm='p2') % Apc(aa15=1, state='p1', axin=ANY) % Ck1a() % Gsk3(dvl=None), kf_apc_phos_ck1a)
+    Rule('apc_p_ck1a',
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
+         Apc(aa15=2, state='u', axin=ANY) % Ck1a() % Gsk3(dvl=None) >>
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
+         Apc(aa15=2, state='p1', axin=ANY) % Ck1a() % Gsk3(dvl=None),
+         kf_apc_phos_ck1a)
 
     Rule('apc_unp1', Apc(state='p1', aa20=None) >> Apc(state='u', aa20=None), k_dephos)
 
-    Rule('apc_p_gsk3', Bcat(bottom=1, tcf4=None, loc='cyt', nterm='p2') % Apc(aa15=1, state='p1', axin=ANY) % Ck1a() % Gsk3(lithium=None,dvl=None) >>
-         Bcat(bottom=1, tcf4=None, loc='cyt', nterm='p2') % Apc(aa15=1, state='p2', axin=ANY) % Ck1a() % Gsk3(lithium=None, dvl=None), kf_apc_phos_gsk3)
+    Rule('apc_p_gsk3',
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
+         Apc(aa15=2, state='p1', axin=ANY) % Ck1a() % Gsk3(lithium=None, dvl=None) >>
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
+         Apc(aa15=2, state='p2', axin=ANY) % Ck1a() % Gsk3(lithium=None, dvl=None),
+         kf_apc_phos_gsk3)
 
     Rule('apc_unp2', Apc(state='p2', aa20=None) >> Apc(state='p1', aa20=None), k_dephos)
 
-    # phosphorylation forces bcat detach from axin
-
-    Rule('bcat_binds_apc', Bcat(top=1, tcf4=None, loc='cyt', nterm='p2', bottom=3) % Axin(bcat=1) % Ck1a() % Gsk3(dvl=None) %
-         Apc(aa20=None, state='p2', aa15=3) >> Bcat(top=2, tcf4=None, loc='cyt', nterm='p2', bottom=None) % Axin(
-        bcat=None) % Ck1a() % Gsk3(dvl=None) %
-         Apc(aa20=2, state='p2', aa15=None), kf_bcat_binds_apc)
+    # phosphorylation forces bcat to detach from axin
+    Rule('bcat_binds_apc',
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
+         Apc(aa15=2, aa20=None, state='p2') % Ck1a() % Gsk3(dvl=None) >>
+         Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=None) %
+         Apc(aa15=None, aa20=1, state='p2') % Ck1a() % Gsk3(dvl=None),
+         kf_bcat_binds_apc)
 
     # apc is still bound to axin and bcat and apc are both phos
 
@@ -375,7 +420,8 @@ def create_destcpx_rules(create=True):
     # Apc release bcat by dephos
     Rule('apc_release_bcat',
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Apc(aa20=1) % Btrcp(b=2) >>
-         Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) + Apc(aa20=None), k_bcat_release)
+         Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) + Apc(aa20=None),
+         k_bcat_release)
 
     # Bcat degraded by proteosome
     # Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >> Btrcp(bcat=None), k_bcat_deg)
@@ -402,69 +448,84 @@ def create_wntmodel_rules(create=True):
     #      k_bcat_deg)
 
     Rule('Bcat_DVL',
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3, dvl=None) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) +
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=None) % Apc(aa15=2) +
          Dvl(gsk3=None, rec=ANY) |
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') % Gsk3(axin=3, dvl=4) % Apc(aa15=2) % Axin(bcat=1, gsk3=3) %
-         Dvl(gsk3=4, rec=ANY), *k_bcat_dvl)
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Apc(aa15=2) %
+         Dvl(gsk3=4, rec=ANY),
+         *k_bcat_dvl)
 
     # Release of APC from destruction complex by DVL
     Rule('Bcat_APC',
-         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Apc(aa15=2) %
-         Dvl(gsk3=4, rec=ANY) >>
-         Bcat(top=1, bottom=None, tcf4=None, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) %
-         Dvl(gsk3=4, rec=ANY) + Apc(aa15=None), k_bcat_apc)
+         Bcat(top=1, bottom=2, tcf4=None, loc='cyt') %
+         Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) % Apc(aa15=2) >>
+         Bcat(top=1, bottom=None, tcf4=None, loc='cyt') %
+         Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) + Apc(aa15=None),
+         k_bcat_apc)
 
     # Beta catenin released from destruction complex and DVL
-    # TODO Added bottom=None into the rule below. Didn't reduce the number of reactions. Not sure why.
-    # TODO Added nterm='u' in the product, which reduces the number of species and reactions.
+    # Assuming beta catenin dephosphorylates when it dissociates from the destruction complex
     Rule('Bcat_release',
-         Bcat(top=1, bottom=None, tcf4=None, nterm=WILD, loc='cyt') % Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) %
-         Dvl(gsk3=4, rec=ANY) >>
-         Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt') + Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) +
-         Dvl(gsk3=None, rec=ANY), k_bcat_release)
+         Bcat(top=1, bottom=None, tcf4=None, nterm=WILD, loc='cyt') %
+         Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) >>
+         Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt') +
+         Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) + Dvl(gsk3=None, rec=ANY),
+         k_bcat_release)
 
     # Beta catenin translocation to the nucleus
     Rule('Bcat_to_nucleus',
-         Bcat(top=None, bottom=None, loc='cyt') >> Bcat(top=None, bottom=None, loc='nuc'), k_bcat_nuc)
+         Bcat(top=None, bottom=None, loc='cyt') >> Bcat(top=None, bottom=None, loc='nuc'),
+         k_bcat_nuc)
 
     # Monomer('Bcat', ['top', 'bottom', 'nterm', 'state', 'tcf4', 'loc'],  # Added tcf4 and loc components
     #         {'state': ['x', 'ub'], 'nterm': ['u', 'p1', 'p2'], 'loc': ['cyt', 'nuc']})
 
     # Beta catenin in nuclues binds to TCF4
     # TODO: Does tcf4 bind gGli2 before bcat binds?
-    Rule('Bcat_tcf4', Bcat(tcf4=None, loc='nuc') + Tcf4(g=ANY, bcat=None) |
+    Rule('Bcat_tcf4',
+         Bcat(tcf4=None, loc='nuc') + Tcf4(g=ANY, bcat=None) |
          Bcat(tcf4=1, loc='nuc') % Tcf4(g=ANY, bcat=1),
          *k_bcat_tcf4)
 
     # TCF4 binds to promoter of Gli2 gene
-    Rule('tcf4_binds_gGli2', Tcf4(g=None, bcat=None) + gGli2(tcf4=None) | Tcf4(g=1, bcat=None) % gGli2(tcf4=1),
+    Rule('tcf4_binds_gGli2',
+         Tcf4(g=None, bcat=None) + gGli2(tcf4=None) | Tcf4(g=1, bcat=None) % gGli2(tcf4=1),
          *k_tcf4_gli2)
 
     # SMAD3 binds to promoter of Gli2 gene
-    Rule('smad3_binds_gGli2', Smad3(g_gli2=None) + gGli2(smad3=None) | Smad3(g_gli2=1) % gGli2(smad3=1), *k_smad3_gli2)
+    Rule('smad3_binds_gGli2',
+         Smad3(g_gli2=None) + gGli2(smad3=None) | Smad3(g_gli2=1) % gGli2(smad3=1),
+         *k_smad3_gli2)
 
     # Gli2 gene transcription
-    Rule('gli2_transcription', gGli2(tcf4=1, smad3=ANY) % Tcf4(g=1, bcat=ANY) >>
+    Rule('gli2_transcription',
+         gGli2(tcf4=1, smad3=ANY) % Tcf4(g=1, bcat=ANY) >>
          gGli2(tcf4=1, smad3=ANY) % Tcf4(g=1, bcat=ANY) + mGli2(),
          k_gli2_tx)
 
     # Gli2 translation
-    Rule('gli2_translation', mGli2() >> mGli2() + Gli2(btrcp=None, g_pthlh=None, state='x', loc='cyt'), k_gli2_tl)
+    Rule('gli2_translation',
+         mGli2() >> mGli2() + Gli2(btrcp=None, g_pthlh=None, state='x', loc='cyt'),
+         k_gli2_tl)
 
     # mGli2 degradation
     Rule('mGli2_deg', mGli2() >> None, k_mgli2_deg)
 
     # TCF4 binds to promoter of PTHlH gene
-    Rule('tcf4_binds_gPthlh', Tcf4(g=None, bcat=None) + gPthlh(tcf4=None) | Tcf4(g=1, bcat=None) % gPthlh(tcf4=1),
+    Rule('tcf4_binds_gPthlh',
+         Tcf4(g=None, bcat=None) + gPthlh(tcf4=None) | Tcf4(g=1, bcat=None) % gPthlh(tcf4=1),
          *k_tcf4_pthlh)
 
     # Gli2 binds to promoter of PTHlH gene
-    Rule('gli2_binds_gPthlh', Gli2(g_pthlh=None, loc='nuc') + gPthlh(gli2=None) |
-         Gli2(g_pthlh=1, loc='nuc') % gPthlh(gli2=1), *k_gli2_pthlh)
+    Rule('gli2_binds_gPthlh',
+         Gli2(g_pthlh=None, loc='nuc') + gPthlh(gli2=None) |
+         Gli2(g_pthlh=1, loc='nuc') % gPthlh(gli2=1),
+         *k_gli2_pthlh)
 
     # PTHlH gene transcription
-    Rule('gPthlh_transcription', gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) >>
-         gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) + mPthlh(), k_pthlh_tx)
+    Rule('gPthlh_transcription',
+         gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) >>
+         gPthlh(tcf4=1, gli2=ANY) % Tcf4(g=1, bcat=ANY) + mPthlh(),
+         k_pthlh_tx)
 
     # PTHrP translation
     Rule('Pthrp_translation', mPthlh() >> mPthlh() + Pthrp(), k_pthrp_tl)
@@ -476,15 +537,20 @@ def create_wntmodel_rules(create=True):
     Rule('Pthrp_deg', Pthrp() >> None, k_pthrp_deg)
 
     # Gli2 phosporylation
-    Rule('Gli2_phospo', Gli2(state='x', loc='cyt', btrcp=None) | Gli2(state='p', loc='cyt', btrcp=None), *k_gli2_phos)
+    Rule('Gli2_phospo',
+         Gli2(state='x', loc='cyt', btrcp=None) | Gli2(state='p', loc='cyt', btrcp=None),
+         *k_gli2_phos)
 
     # Phopho-Gli2 translocates to nucleus
-    Rule('Gli2_to_nuc', Gli2(state='p', g_pthlh=None, loc='cyt') | Gli2(state='p', g_pthlh=None, loc='nuc'), *k_gli2_nuc)
-
+    Rule('Gli2_to_nuc',
+         Gli2(state='p', g_pthlh=None, loc='cyt') | Gli2(state='p', g_pthlh=None, loc='nuc'),
+         *k_gli2_nuc)
 
     # Gli2 binds BTRCP
-    Rule('Gli2_binds_BTRCP', Gli2(state='x', loc='cyt', btrcp=None) + Btrcp(b=None) |
-         Gli2(state='x', loc='cyt', btrcp=1) % Btrcp(b=1), *k_gli2_btrcp)
+    Rule('Gli2_binds_BTRCP',
+         Gli2(state='x', loc='cyt', btrcp=None) + Btrcp(b=None) |
+         Gli2(state='x', loc='cyt', btrcp=1) % Btrcp(b=1),
+         *k_gli2_btrcp)
 
     # Gli2 ubiquitination
     Rule('Gli2_ubiq', Gli2(state='x', loc='cyt', btrcp=ANY) >> Gli2(state='ub', loc='cyt', btrcp=ANY), k_gli2_ubiq)
@@ -493,14 +559,17 @@ def create_wntmodel_rules(create=True):
     Rule('Gli2_degradation', Gli2(state='ub', btrcp=1) % Btrcp(b=1) >> Btrcp(b=None), k_gli2_deg)
 
     # WNT3A ligand binds receptor
-    Rule('wnt_binds_rec', Wnt(rec=None) + Rec(wnt=None) | Wnt(rec=1) % Rec(wnt=1), *k_wnt_rec)
+    Rule('wnt_binds_rec', Wnt(rec=None) + Rec(wnt=None, dvl=None) | Wnt(rec=1) % Rec(wnt=1, dvl=None), *k_wnt_rec)
 
     # DVL binds WNT-bound receptor
-    Rule('dvl_binds_wnt_rec', Dvl(rec=None) + Rec(wnt=1, dvl=None) % Wnt(rec=1) |
-         Dvl(rec=2) % Rec(wnt=1, dvl=2) % Wnt(rec=1), *k_dvl_rec)
+    Rule('dvl_binds_wnt_rec',
+         Dvl(rec=None) + Rec(wnt=1, dvl=None) % Wnt(rec=1) |
+         Dvl(rec=2) % Rec(wnt=1, dvl=2) % Wnt(rec=1),
+         *k_dvl_rec)
 
     # DVL binds unbound receptor (only happens for high rigidity)
-    Rule('dvl_binds_rec', Dvl(rec=None) + Rec(wnt=None, dvl=None) | Dvl(rec=1) % Rec(wnt=None, dvl=1), *k_dvl_rec_rigid)
+    # TODO: Commenting out the rule below for now, to simplify the debugging process. Will add it back in eventually
+    # Rule('dvl_binds_rec', Dvl(rec=None) + Rec(wnt=None, dvl=None) | Dvl(rec=1) % Rec(wnt=None, dvl=1), *k_dvl_rec_rigid)
 
     # DKK1 binds receptor
     Rule('dkk1_binds_rec', Dkk1(rec=None) + Rec(wnt=None) | Dkk1(rec=1) % Rec(wnt=1), *k_dkk1_rec)
@@ -557,11 +626,11 @@ print('reactions %d' % len(model.reactions))
 # names.sort()
 # for name in names:
 #     print(model.rules[name])
-quit()
-# for i, sp in enumerate(model.species):
-#     print('%d: %s' % (i, sp))
-#
 # quit()
+for i, sp in enumerate(model.species):
+    print('%d: %s' % (i, sp))
+
+quit()
 
 ##########
 # Debugging (keep for now)
