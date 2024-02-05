@@ -36,7 +36,7 @@ Parameter('Gsk3_0', 50)
 Parameter('Ck1a_0', 50)
 Parameter('Apc_0', 50)
 Parameter('Bcat_0', 0)  # 100)
-Parameter('Btrcp_0', 30)
+Parameter('Btrcp_0', 1000)  # 30)
 Parameter('Li_0', 0)
 
 Parameter('Rec_0', 100)
@@ -81,7 +81,7 @@ Initial(Smad3(g_gli2=None), Smad3_0)
 # Observable('Apc_p1', Apc(state='p1'))
 Observable('Apc_p2', Apc(state='p2'))  # We think phos of Apc by GSK3 is "kinase activity" in Stambolic 1996
 Observable('Bcat_cyt', Bcat(loc='cyt'))
-Observable('Bcat_cyt_free', Bcat(top=None, bottom=None, loc='cyt'))
+# Observable('Bcat_cyt_free', Bcat(top=None, bottom=None, loc='cyt'))
 Observable('Bcat_nuc', Bcat(loc='nuc'))
 # Observable('Bcat_Axin', Bcat(top=1) % Axin(bcat=1))
 # Observable('Bcat_Axin_Apc', Bcat(top=1, bottom=2) % Axin(bcat=1) % Apc(aa15=2))
@@ -89,10 +89,12 @@ Observable('Bcat_nuc', Bcat(loc='nuc'))
 # Observable('Bcat_p1', Bcat(nterm='p1'))
 Observable('Bcat_p2', Bcat(nterm='p2'))
 # Observable('Bcat_Apc_aa15', Apc(aa15=ANY, aa20=None))
-# Observable('Bcat_Apc_aa20', Apc(aa15=None, aa20=ANY))
+# Observable('Bcat_Apc_aa20', Bcat(top=1) % Apc(aa20=1))
 # Observable('Bcat_Apc_both', Apc(aa15=ANY, aa20=ANY))  # this should be zero
-# Observable('Bcat_ub_Apc', Bcat(top=1, bottom=None, state='ub') % Apc(aa20=1))
-# Observable('Bcat_ub_tot', Bcat(state='ub'))
+Observable('Bcat_x_Apc_aa20', Bcat(top=1, state='x') % Apc(aa20=1))
+Observable('Bcat_ub_Apc_aa20', Bcat(top=1, state='ub') % Apc(aa20=1))
+Observable('Bcat_ub_free', Bcat(top=None, bottom=ANY, state='ub'))
+# Observable('Bcat_ub', Bcat(state='ub'))
 Observable('Bcat_tot', Bcat())
 Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=ANY, apc=ANY))
@@ -110,6 +112,7 @@ obs_to_plot = [
     ['Pthrp_tot'],
     ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
     ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
+    ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
     ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
     ['DestCpx', 'DestCpx_Bcat']
 ]
@@ -119,8 +122,8 @@ obs_to_plot = [
 # common parameters
 Parameter('kf_btrcp_binds_bcat', 0.01)
 Parameter('kr_btrcp_binds_bcat', 1)
-Parameter('k_bcat_ubiq', 0.1)  # 1
-Parameter('k_bcat_deg', 0.01)  # 0.1
+Parameter('k_bcat_ubiq', 1)  # 1
+Parameter('k_bcat_deg', 10)  # 0.1
 Parameter('k_bcat_synth', 0.1)  # since beta-catenin is degraded by the proteosome, we need to add a source term
 
 # destcpx parameters
@@ -147,7 +150,7 @@ Parameter('kr_gsk3_li', 0.01)
 # WNT parameters
 k_bcat_dvl = [
      Parameter('kf_bcat_dvl', 1),  # 1), todo
-     Parameter('kr_bcat_dvl', 10)]
+     Parameter('kr_bcat_dvl', 1)]
 Parameter('k_apc_release_dvl', 1)
 Parameter('k_bcat_release_dvl', 1)
 k_bcat_nuc = [
@@ -566,7 +569,7 @@ create_wntmodel_rules(create=True)
 if __name__ == '__main__':
 
     # run simulation
-    tspan = np.linspace(0, 4000, 4001)  # (0, 40, 101)
+    tspan = np.linspace(0, 5000, 5001)  # (0, 40, 101)
     sim = ScipyOdeSimulator(model, tspan, verbose=True)
 
     print('monomers %d' % len(model.monomers))
