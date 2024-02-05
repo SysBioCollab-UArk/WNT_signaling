@@ -16,39 +16,39 @@ Monomer('Btrcp', ['b'])
 Monomer('Li', ['gsk3'])
 
 # WNT model monomers
+Monomer('Rec', ['wnt', 'dvl'])
+Monomer('Dvl', ['rec', 'gsk3'])
+Monomer('Wnt', ['rec'])  # Wnt, rec is receptor complex - lrp5 and fzd
+Monomer('Dkk1', ['rec'])  # Wnt receptor inhibitor
+Monomer('Wif1', ['wnt'])  # Wnt ligand inhibitor
 Monomer('Gli2', ['btrcp', 'g_pthlh', 'state', 'loc'], {'state': ['x', 'p', 'ub'], 'loc': ['cyt', 'nuc']})
 Monomer('gGli2', ['tcf4', 'smad3'])  # Gli2 gene
 Monomer('mGli2')  # Gli2 mRNA
-Monomer('Wnt', ['rec'])  # Wnt, rec is receptor complex - lrp5 and fzd
-Monomer('Tcf4', ['g', 'bcat'])
-Monomer('Smad3', ['g_gli2'])
-Monomer('Rec', ['wnt', 'dvl'])
-Monomer('Dvl', ['rec', 'gsk3'])
 Monomer('gPthlh', ['gli2', 'tcf4'])  # Pthlh gene
 Monomer('mPthlh')  # Pthlh mRNA
 Monomer('Pthrp')  # Pthrp protein
-Monomer('Dkk1', ['rec'])  # Wnt receptor inhibitor
-Monomer('Wif1', ['wnt'])  # Wnt ligand inhibitor
+Monomer('Tcf4', ['g', 'bcat'])
+Monomer('Smad3', ['g_gli2'])
 
 # Initials
 Parameter('Axin_0', 100)
 Parameter('Gsk3_0', 50)
 Parameter('Ck1a_0', 50)
 Parameter('Apc_0', 50)
-Parameter('Bcat_0', 100)
+Parameter('Bcat_0', 0)  # 100)
 Parameter('Btrcp_0', 30)
 Parameter('Li_0', 0)
 
-Parameter('Gli2_0', 50)
-Parameter('gGli2_0', 1)
-Parameter('Wnt_0', 100)
-Parameter('Tcf4_0', 100)
-Parameter('Smad3_0', 50)
 Parameter('Rec_0', 100)
 Parameter('Dvl_0', 50)
-Parameter('gPthlh_0', 1)
+Parameter('Wnt_0', 50)  # 50 todo
 # Parameter('Dkk1_0', 100)
 # Parameter('Wif1_0', 0)
+Parameter('Gli2_0', 0)  # 50)
+Parameter('gGli2_0', 1)
+Parameter('gPthlh_0', 1)
+Parameter('Tcf4_0', 100)
+Parameter('Smad3_0', 50)
 
 Initial(Axin(bcat=None, gsk3=None, ck1a=None, apc=None), Axin_0)
 Initial(Gsk3(axin=None, lithium=None, dvl=None), Gsk3_0)
@@ -58,49 +58,48 @@ Initial(Bcat(tcf4=None, top=None, bottom=None, state='x', loc='cyt', nterm='u'),
 Initial(Btrcp(b=None), Btrcp_0)
 Initial(Li(gsk3=None), Li_0)
 
-Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
-Initial(gGli2(tcf4=None, smad3=None), gGli2_0)
-Initial(Wnt(rec=None), Wnt_0)
-Initial(Tcf4(g=None, bcat=None), Tcf4_0)
-Initial(Smad3(g_gli2=None), Smad3_0)
 Initial(Rec(wnt=None, dvl=None), Rec_0)
 Initial(Dvl(rec=None, gsk3=None), Dvl_0)
-Initial(gPthlh(gli2=None, tcf4=None), gPthlh_0)
+Initial(Wnt(rec=None), Wnt_0)
 # Initial(Dkk1(rec=None), Dkk1_0)
 # Initial(Wif1(wnt=None), Wif1_0)
+Initial(Gli2(btrcp=None, state='x', g_pthlh=None, loc='cyt'), Gli2_0)
+Initial(gGli2(tcf4=None, smad3=None), gGli2_0)
+Initial(gPthlh(gli2=None, tcf4=None), gPthlh_0)
+Initial(Tcf4(g=None, bcat=None), Tcf4_0)
+Initial(Smad3(g_gli2=None), Smad3_0)
 
 # Observables
 # Observable('Axin_tot', Axin())
 # Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
-Observable('Axin_Ck1a', Axin(ck1a=ANY))
-Observable('Axin_Gsk3', Axin(gsk3=ANY))
-Observable('Axin_Apc', Axin(apc=ANY))
+# Observable('Axin_Ck1a', Axin(ck1a=ANY))
+# Observable('Axin_Gsk3', Axin(gsk3=ANY))
+# Observable('Axin_Apc', Axin(apc=ANY))
 # Observable('Gsk3_tot', Gsk3())
 # Observable('Ck1a_tot', Ck1a())
-# Observable('Apc_aa20u', Apc(state='u'))
-# Observable('Apc_aa20p', Apc(state='p'))
-Observable('Apc_p1', Apc(state='p1'))
+# Observable('Apc_u', Apc(state='u'))
+# Observable('Apc_p1', Apc(state='p1'))
 Observable('Apc_p2', Apc(state='p2'))  # We think phos of Apc by GSK3 is "kinase activity" in Stambolic 1996
 Observable('Bcat_cyt', Bcat(loc='cyt'))
-# Observable('Bcat_cyt_free', Bcat(top=None, bottom=None, loc='cyt'))
+Observable('Bcat_cyt_free', Bcat(top=None, bottom=None, loc='cyt'))
 Observable('Bcat_nuc', Bcat(loc='nuc'))
 # Observable('Bcat_Axin', Bcat(top=1) % Axin(bcat=1))
 # Observable('Bcat_Axin_Apc', Bcat(top=1, bottom=2) % Axin(bcat=1) % Apc(aa15=2))
 # Observable('Bcat_u', Bcat(nterm='u'))
 # Observable('Bcat_p1', Bcat(nterm='p1'))
-# Observable('Bcat_p2', Bcat(nterm='p2'))
-Observable('Bcat_Apc_aa15', Apc(aa15=ANY, aa20=None))
-Observable('Bcat_Apc_aa20', Apc(aa15=None, aa20=ANY))
-Observable('Bcat_Apc_both', Apc(aa15=ANY, aa20=ANY))  # this should be zero
-Observable('Bcat_ub_Apc', Bcat(top=1, bottom=None, state='ub') % Apc(aa20=1))
-Observable('Bcat_ub_tot', Bcat(state='ub'))
+Observable('Bcat_p2', Bcat(nterm='p2'))
+# Observable('Bcat_Apc_aa15', Apc(aa15=ANY, aa20=None))
+# Observable('Bcat_Apc_aa20', Apc(aa15=None, aa20=ANY))
+# Observable('Bcat_Apc_both', Apc(aa15=ANY, aa20=ANY))  # this should be zero
+# Observable('Bcat_ub_Apc', Bcat(top=1, bottom=None, state='ub') % Apc(aa20=1))
+# Observable('Bcat_ub_tot', Bcat(state='ub'))
 Observable('Bcat_tot', Bcat())
 Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('GSK3_activity', Bcat(nterm='p2') + Apc(state='p2'))
 # Observable('Btrcp_tot', Btrcp())
-Observable('Li_total', Li())
-Observable('Li_Gsk3', Li(gsk3=ANY))
+# Observable('Li_total', Li())
+# Observable('Li_Gsk3', Li(gsk3=ANY))
 
 Observable('Gli2_tot', Gli2())
 Observable('Gli2_cyt', Gli2(loc='cyt'))
@@ -110,25 +109,19 @@ Observable('Pthrp_tot', Pthrp())
 obs_to_plot = [
     ['Pthrp_tot'],
     ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
-    ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc']
-    # ['ck1a_axin', 'gsk3_axin', 'apc_axin'],
-    # ['dcplx', 'bcat_dcplx'],
-    # ['bcat_p1', 'bcat_p2'],
-    # ['apc_p1', 'apc_p2'],
-    # ['bcat_apc_aa15', 'bcat_apc_aa20', 'bcat_apc_both'],
-    # ['bcat_ub_apc', 'bcat_ub_apc_btrcp', 'bcat_ub_btrcp',
-    #  'bcat_ub_btrcp_total', 'bcat_ub_total'],
-    # ['bcat_ub_total', 'Li_total', 'Li_Gsk3'],
-    # ['bcat_total']
+    ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
+    ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
+    ['DestCpx', 'DestCpx_Bcat']
 ]
 
-# wnt_observables = ['pthrp_tot', 'gli2_tot', 'gli2_cyt', 'gli2_nuc', 'bcat_tot', 'bcat_cyt', 'bcat_nuc']
-
 # Rate constants
-# Common Parameters
+
+# common parameters
+Parameter('kf_btrcp_binds_bcat', 0.01)
+Parameter('kr_btrcp_binds_bcat', 1)
 Parameter('k_bcat_ubiq', 0.1)  # 1
-Parameter('k_bcat_release', 10)  # 1
-Parameter('k_bcat_deg', 0.001)  # 0.1
+Parameter('k_bcat_deg', 0.01)  # 0.1
+Parameter('k_bcat_synth', 0.1)  # since beta-catenin is degraded by the proteosome, we need to add a source term
 
 # destcpx parameters
 Parameter('kf_axin_ck1a', 1)
@@ -137,30 +130,29 @@ Parameter('kf_axin_gsk3', 1)
 Parameter('kr_axin_gsk3', 100)
 Parameter('kf_axin_apc', 1)
 Parameter('kr_axin_apc', 50)
-Parameter('kf_bcat_dtcpx', 100)
-Parameter('kr_bcat_dtcpx', 0.1)
-Parameter('kf_bcat_apc', 100)
-Parameter('kr_bcat_apc', 0.1)
-Parameter('kf_bcat_phos_gsk3', 100)
-# Parameter('kr_bcat_phos_gsk3', 1)  # assuming (for now) that all dephos rates are equal to k_dephos
-Parameter('kf_bcat_phos_ck1a', 10)
-# Parameter('kr_bcat_phos_ck1a', 1)  # assuming (for now) that all dephos rates are equal to k_dephos
-Parameter('kf_apc_phos_ck1a', 20)
-# Parameter('kr_apc_phos_ck1a', 2)  # assuming (for now) that all dephos rates are equal to k_dephos
-Parameter('kf_apc_phos_gsk3', 200)  # 200
+Parameter('kf_bcat_dtcpx', 1)  # 100)
+Parameter('kr_bcat_dtcpx', 100)  # 0.1)
+# Parameter('kf_bcat_apc', 100)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
+# Parameter('kr_bcat_apc', 0.1)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
+Parameter('k_bcat_phos_ck1a', 10)
+Parameter('k_bcat_phos_gsk3', 100)
+Parameter('k_apc_phos_ck1a', 20)
+Parameter('k_apc_phos_gsk3', 200)  # 200
 Parameter('k_dephos', 0.1)
-Parameter('kf_bcat_binds_apc', 100)
-Parameter('kf_btrcp_binds_bcat', 0.01)
-Parameter('kr_btrcp_binds_bcat', 1)
+Parameter('k_bcat_binds_apc_aa20', 0.01)  # 0.005) todo
+Parameter('k_bcat_ub_release_apc', 1)  # 10
 Parameter('kf_gsk3_li', 1)
 Parameter('kr_gsk3_li', 0.01)
 
 # WNT parameters
 k_bcat_dvl = [
-     Parameter('kf_bcat_dvl', 10),
+     Parameter('kf_bcat_dvl', 1),  # 1), todo
      Parameter('kr_bcat_dvl', 10)]
-Parameter('k_bcat_apc', 1)
-Parameter('k_bcat_nuc', 10)
+Parameter('k_apc_release_dvl', 1)
+Parameter('k_bcat_release_dvl', 1)
+k_bcat_nuc = [
+    Parameter('kf_bcat_nuc', 1),
+    Parameter('kr_bcat_nuc', 1)]  # 1 todo
 k_bcat_tcf4 = [
      Parameter('kf_bcat_tcf4', 1),
      Parameter('kr_bcat_tcf4', 1)]
@@ -186,18 +178,18 @@ Parameter('k_pthrp_deg', 0.1)
 k_gli2_phos = [Parameter('kf_gli2_phos', 10),
                Parameter('kr_gli2_phos', 1)]
 k_gli2_nuc = [Parameter('kf_gli2_nuc', 1),  # 100
-              Parameter('kr_gli2_nuc', 1)]
+              Parameter('kr_gli2_nuc', 10)]
 k_gli2_btrcp = [
      Parameter('kf_gli2_btrcp', 10),
      Parameter('kr_gli2_btrcp', 1)]
 Parameter('k_gli2_ubiq', 10)
 Parameter('k_gli2_deg', 100)
 k_wnt_rec = [
-     Parameter('kf_wnt_rec', 10),
-     Parameter('kr_wnt_rec', 1)]
+     Parameter('kf_wnt_rec', 1),
+     Parameter('kr_wnt_rec', 10)]
 k_dvl_rec = [
-     Parameter('kf_dvl_rec', 10),
-     Parameter('kr_dvl_rec', 1)]
+     Parameter('kf_dvl_rec', 1),
+     Parameter('kr_dvl_rec', 10)]
 k_dvl_rec_rigid = [
      Parameter('kf_dvl_rec_rigid', 0),  # 100),
      Parameter('kr_dvl_rec_rigid', 0)]  # 1)]
@@ -209,6 +201,8 @@ k_wif_wnt = [
      Parameter('kr_wif_wnt', 1)]
 
 # Common Rules
+
+# Btrcp binds to Bcat after Bcat has detached from Axin
 Rule('Btrcp_binds_Bcat',
      Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2', state='x') %
      Apc(aa15=None, aa20=1, state='p2', axin=ANY) + Btrcp(b=None) |
@@ -226,6 +220,9 @@ Rule('Bcat_ubiqitination',
 Rule('Bcat_degradation',
      Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) >> Btrcp(b=None),
      k_bcat_deg)
+
+# Bcat synthesis
+Rule('Bcat_synthesis', None >> Bcat(top=None, bottom=None, nterm='u', state='x', tcf4=None, loc='cyt'), k_bcat_synth)
 
 
 def create_destcpx_rules(create=True):
@@ -324,7 +321,7 @@ def create_destcpx_rules(create=True):
     Rule('Bcat_phos_Ck1a',
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='u') % Axin(bcat=1) % Apc(aa15=2) |
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1) % Apc(aa15=2),
-         kf_bcat_phos_ck1a, k_dephos)  # ck1a phos first
+         k_bcat_phos_ck1a, k_dephos)  # ck1a phos first
 
     # GSK3 can't phosphorylate Bcat if it's bound to DLV or Li
     Rule('Bcat_phos_Gsk3',
@@ -332,7 +329,7 @@ def create_destcpx_rules(create=True):
          Axin(bcat=1, gsk3=3) % Apc(aa15=2) % Gsk3(axin=3, lithium=None, dvl=None) >>
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') %
          Axin(bcat=1, gsk3=3) % Apc(aa15=2) % Gsk3(axin=3, lithium=None, dvl=None),
-         kf_bcat_phos_gsk3)  # then gsk3b phos
+         k_bcat_phos_gsk3)  # then gsk3b phos
 
     # Don't restrict dephosphorylation of Bcat to case where Gsk3 is not bound to lithium
     # (i.e., Li could bind after phosphorylation of Bcat by Gsk3. Should be allowed to desphosphorylate in that case)
@@ -340,10 +337,6 @@ def create_destcpx_rules(create=True):
          Bcat(top=1, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None) >>
          Bcat(top=1, tcf4=None, loc='cyt', nterm='p1') % Axin(bcat=1, gsk3=2) % Gsk3(axin=2, dvl=None),
          k_dephos)
-
-    Rule('Lithium_binds_GSK3',
-         Gsk3(lithium=None, dvl=None) + Li(gsk3=None) | Gsk3(lithium=1, dvl=None) % Li(gsk3=1),
-         kf_gsk3_li, kr_gsk3_li)
 
     # # Bcat binds to aa15 site of APC (it is assumed phosphorylation state of Bcat does not affect binding)
     # Rule('Bcat_binds_aa15',
@@ -358,7 +351,7 @@ def create_destcpx_rules(create=True):
          Apc(aa15=2, state='u', axin=ANY) % Ck1a() % Gsk3(dvl=None) >>
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
          Apc(aa15=2, state='p1', axin=ANY) % Ck1a() % Gsk3(dvl=None),
-         kf_apc_phos_ck1a)
+         k_apc_phos_ck1a)
 
     Rule('Apc_unphos_p1', Apc(state='p1', aa20=None) >> Apc(state='u', aa20=None), k_dephos)
 
@@ -367,7 +360,7 @@ def create_destcpx_rules(create=True):
          Apc(aa15=2, state='p1', axin=ANY) % Ck1a() % Gsk3(lithium=None, dvl=None) >>
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=1) %
          Apc(aa15=2, state='p2', axin=ANY) % Ck1a() % Gsk3(lithium=None, dvl=None),
-         kf_apc_phos_gsk3)
+         k_apc_phos_gsk3)
 
     Rule('Apc_unphos_p2', Apc(state='p2', aa20=None) >> Apc(state='p1', aa20=None), k_dephos)
 
@@ -377,7 +370,7 @@ def create_destcpx_rules(create=True):
          Apc(aa15=2, aa20=None, state='p2') % Ck1a() % Gsk3(dvl=None) >>
          Bcat(top=1, bottom=None, tcf4=None, loc='cyt', nterm='p2') % Axin(bcat=None) %
          Apc(aa15=None, aa20=1, state='p2') % Ck1a() % Gsk3(dvl=None),
-         kf_bcat_binds_apc)
+         k_bcat_binds_apc_aa20)
 
     # apc is still bound to axin and bcat and apc are both phos
 
@@ -401,11 +394,15 @@ def create_destcpx_rules(create=True):
     Rule('Apc_releases_Bcat_ub',
          Bcat(top=1, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) % Apc(aa20=1) >>
          Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(b=2) + Apc(aa20=None),
-         k_bcat_release)
+         k_bcat_ub_release_apc)
 
     # Bcat degraded by proteosome
     # Rule('bcat_degradation', Bcat(top=None, bottom=2, tcf4=None, loc='cyt', state='ub') % Btrcp(bcat=2) >>
     # Btrcp(bcat=None), k_bcat_deg)
+
+    Rule('Lithium_binds_GSK3',
+         Gsk3(lithium=None, dvl=None) + Li(gsk3=None) | Gsk3(lithium=1, dvl=None) % Li(gsk3=1),
+         kf_gsk3_li, kr_gsk3_li)
 
     return True
 
@@ -441,7 +438,7 @@ def create_wntmodel_rules(create=True):
          Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) % Apc(aa15=2) >>
          Bcat(top=1, bottom=None, tcf4=None, loc='cyt') %
          Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) + Apc(aa15=None),
-         k_bcat_apc)
+         k_apc_release_dvl)
 
     # Beta catenin released from destruction complex and DVL
     # Assuming beta catenin dephosphorylates when it dissociates from the destruction complex
@@ -450,12 +447,12 @@ def create_wntmodel_rules(create=True):
          Axin(bcat=1, gsk3=3) % Gsk3(axin=3, dvl=4) % Dvl(gsk3=4, rec=ANY) >>
          Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt') +
          Axin(bcat=None, gsk3=None) + Gsk3(axin=None, dvl=None) + Dvl(gsk3=None, rec=ANY),
-         k_bcat_release)
+         k_bcat_release_dvl)
 
     # Beta catenin translocation to the nucleus
     Rule('Bcat_transport_nucleus',
-         Bcat(top=None, bottom=None, loc='cyt') >> Bcat(top=None, bottom=None, loc='nuc'),
-         k_bcat_nuc)
+         Bcat(top=None, bottom=None, loc='cyt') | Bcat(top=None, bottom=None, loc='nuc'),
+         *k_bcat_nuc)
 
     # Monomer('Bcat', ['top', 'bottom', 'nterm', 'state', 'tcf4', 'loc'],  # Added tcf4 and loc components
     #         {'state': ['x', 'ub'], 'nterm': ['u', 'p1', 'p2'], 'loc': ['cyt', 'nuc']})
@@ -534,7 +531,8 @@ def create_wntmodel_rules(create=True):
          *k_gli2_btrcp)
 
     # Gli2 ubiquitination
-    Rule('Gli2_ubiquitination', Gli2(state='x', loc='cyt', btrcp=ANY) >> Gli2(state='ub', loc='cyt', btrcp=ANY), k_gli2_ubiq)
+    Rule('Gli2_ubiquitination', Gli2(state='x', loc='cyt', btrcp=ANY) >> Gli2(state='ub', loc='cyt', btrcp=ANY),
+         k_gli2_ubiq)
 
     # Gli2 degradation
     Rule('Gli2_degradation', Gli2(state='ub', btrcp=1) % Btrcp(b=1) >> Btrcp(b=None), k_gli2_deg)
@@ -568,7 +566,7 @@ create_wntmodel_rules(create=True)
 if __name__ == '__main__':
 
     # run simulation
-    tspan = np.linspace(0, 5000, 5001)  # (0, 40, 101)
+    tspan = np.linspace(0, 4000, 4001)  # (0, 40, 101)
     sim = ScipyOdeSimulator(model, tspan, verbose=True)
 
     print('monomers %d' % len(model.monomers))
@@ -576,91 +574,52 @@ if __name__ == '__main__':
     print('species %d' % len(model.species))
     print('reactions %d' % len(model.reactions))
 
-    # print(model.monomers)
-    # names = []
-    # for rule in model.rules:
-    #     names.append(rule.name)
-    # # names = [n.lower() for n in names]
-    # names.sort()
-    # for name in names:
-    #     print(model.rules[name])
-
-    # for i, sp in enumerate(model.species):
-    #     print('%d: %s' % (i, sp))
-    #
-    # quit()
-
-    ##########
-    # Debugging (keep for now)
-    # for rxn in model.reactions:
-    #     if 'Gli2_degradation' in rxn['rule']:
-    #         print('reaction:')
-    #         print('\t', rxn)
-    #         print('reactants:')
-    #         for n in rxn['reactants']:
-    #             print('\t', model.species[n])
-    #         print('products:')
-    #         for n in rxn['products']:
-    #             print('\t', model.species[n])
-    # quit()
-    ##########
-
-    # traj = sim.run()
-    '''
-    if destcpx_rules:
-        plt.figure()
-        # sim_destcpx = ScipyOdeSimulator(destcpx_model, tspan, verbose=True)
+    if True:
+        plt.figure('gsk3_activity')
         Li_conc = np.arange(0, 101, 5)
-        for kf in [1, 10, 100]:
+        for k_phos in [1]:  # , 10, 100]:
             gsk3_activity = []
-            # gsk3_activity2 = []
-    
             for conc in Li_conc:
-                print(conc, kf)
-                result = sim.run(param_values={'Li_0': conc, 'kf_bcat_phos_gsk3': kf})
+                print(conc, k_phos)
+                result = sim.run(param_values={'Li_0': conc, 'k_bcat_phos_gsk3': k_phos})
                 gsk3_activity.append(result.observables['GSK3_activity'][-1])
-                # result2 = sim_destcpx.run(param_values={'Li_0': conc, 'kf_bcat_phos_gsk3': kf})
-                # gsk3_activity2.append(result2.observables['GSK3_activity'][-1])
-    
             gsk3_activity = np.array(gsk3_activity)
-            # gsk3_activity2 = np.array(gsk3_activity2)
-    
-            p = plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="kf=%g" % kf)
-            # plt.plot(Li_conc, gsk3_activity2/gsk3_activity2[0], 'o',
-            # color=p[0].get_color(), mfc='none', label="kf=%g" % kf)
-    
+            plt.plot(Li_conc, gsk3_activity/gsk3_activity[0], 'o', label="k_phos=%g" % k_phos)
         plt.xlabel('Li concentration')
         plt.ylabel('GSK3 activity')
         plt.legend(loc=0)
-    '''
 
     # run simulation(WNT)
     # if wntmodel_rules:
     if True:
-        nrows = 3
-        ncols = 1
-        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(6.4, 9.6))
+        ncols = 2
+        nrows = int(np.ceil(len(obs_to_plot) / ncols))
+        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, constrained_layout=True,
+                                figsize=(6.4, 2.4*nrows))  # default: (6.4, 4.8)
         if len(axs.shape) == 1:
             axs = axs.reshape(axs.shape[0], 1)
+        # run simulation
         traj = sim.run()
-        # sim_wnt = ScipyOdeSimulator(wnt_model, tspan, verbose=True)
-        # traj_wnt = sim_wnt.run()
+        # plot results
         row = 0
         col = 0
         for obs in obs_to_plot:
             print(obs)
             for o in obs:
                 axs[row, col].plot(tspan, traj.observables[o], lw=2, label=o)
-            # axs[row, col].plot(tspan, traj_wnt.observables[obs], 'o', mfc='none', lw=2, label='wnt_model')
             axs[row, col].legend(loc=0)
-            axs[row, col].set_xlabel('Time')
-            axs[row, col].set_ylabel('Population')
-            # axs[row, col].ticklabel_format(style='scientific')
             if (col+1) % ncols == 0:
                 row += 1
                 col = 0
             else:
                 col += 1
+        # add shared axis labels
+        fig.supxlabel('Time')
+        fig.supylabel('Concentration')
+        # delete extra plots
+        if col > 0:
+            while col < ncols:
+                fig.delaxes(axs[row][col])
+                col += 1
 
-    plt.tight_layout(pad=1)
     plt.show()
