@@ -70,8 +70,15 @@ Initial(Tcf4(g=None, bcat=None), Tcf4_0)
 Initial(Smad3(g_gli2=None), Smad3_0)
 
 # Observables
+Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
+Observable('Gsk3_free', Gsk3(axin=None, lithium=None, dvl=None))
+Observable('Ck1a_free', Ck1a(axin=None))
+Observable('Apc_free', Apc(axin=None, aa15=None, aa20=None, state='u'))
+Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
+
+
+
 # Observable('Axin_tot', Axin())
-# Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
 # Observable('Axin_Ck1a', Axin(ck1a=ANY))
 # Observable('Axin_Gsk3', Axin(gsk3=ANY))
 # Observable('Axin_Apc', Axin(apc=ANY))
@@ -96,7 +103,6 @@ Observable('Bcat_ub_Apc_aa20', Bcat(top=1, state='ub') % Apc(aa20=1))
 Observable('Bcat_ub_free', Bcat(top=None, bottom=ANY, state='ub'))
 # Observable('Bcat_ub', Bcat(state='ub'))
 Observable('Bcat_tot', Bcat())
-Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('GSK3_activity', Bcat(nterm='p2') + Apc(state='p2'))
 # Observable('Btrcp_tot', Btrcp())
@@ -109,11 +115,12 @@ Observable('Gli2_nuc', Gli2(loc='nuc'))
 Observable('Pthrp_tot', Pthrp())
 
 obs_to_plot = [
-    ['Pthrp_tot'],
-    ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
-    ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
-    ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
-    ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
+    ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],
+    # ['Pthrp_tot']#,
+    # ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
+    # ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
+    # ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
+    # ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
     ['DestCpx', 'DestCpx_Bcat']
 ]
 
@@ -128,11 +135,11 @@ Parameter('k_bcat_synth', 0.1)  # since beta-catenin is degraded by the proteoso
 
 # destcpx parameters
 Parameter('kf_axin_ck1a', 1)
-Parameter('kr_axin_ck1a', 10)
+Parameter('kr_axin_ck1a', 1e4)
 Parameter('kf_axin_gsk3', 1)
-Parameter('kr_axin_gsk3', 100)
+Parameter('kr_axin_gsk3', 1e4)
 Parameter('kf_axin_apc', 1)
-Parameter('kr_axin_apc', 50)
+Parameter('kr_axin_apc', 1e4)
 Parameter('kf_bcat_dtcpx', 1)  # 100)
 Parameter('kr_bcat_dtcpx', 100)  # 0.1)
 # Parameter('kf_bcat_apc', 100)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
@@ -569,14 +576,14 @@ create_wntmodel_rules(create=True)
 if __name__ == '__main__':
 
     # run simulation
-    tspan = np.linspace(0, 5000, 5001)  # (0, 40, 101)
+    tspan = np.linspace(0, 1000, 1001)  #(0, 5000, 5001)  # (0, 40, 101)
     sim = ScipyOdeSimulator(model, tspan, verbose=True)
 
     print('monomers %d' % len(model.monomers))
     print('rules %d' % len(model.rules))
     print('species %d' % len(model.species))
     print('reactions %d' % len(model.reactions))
-
+    '''
     if True:
         plt.figure('gsk3_activity')
         Li_conc = np.arange(0, 101, 5)
@@ -591,7 +598,7 @@ if __name__ == '__main__':
         plt.xlabel('Li concentration')
         plt.ylabel('GSK3 activity')
         plt.legend(loc=0)
-
+    '''
     # run simulation(WNT)
     # if wntmodel_rules:
     if True:
@@ -609,8 +616,8 @@ if __name__ == '__main__':
         for obs in obs_to_plot:
             print(obs)
             for o in obs:
-                axs[row, col].plot(tspan, traj.observables[o], lw=2, label=o)
-            axs[row, col].legend(loc=0)
+                axs[col, row].plot(tspan, traj.observables[o], lw=2, label=o)
+            axs[col, row].legend(loc=0)
             if (col+1) % ncols == 0:
                 row += 1
                 col = 0
