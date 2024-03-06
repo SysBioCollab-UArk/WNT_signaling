@@ -32,8 +32,8 @@ Monomer('Smad3', ['g_gli2'])
 
 # Initials
 Parameter('Axin_0', 100)
-Parameter('Gsk3_0', 50)
-Parameter('Ck1a_0', 50)
+Parameter('Gsk3_0', 80)
+Parameter('Ck1a_0', 70)
 Parameter('Apc_0', 50)
 Parameter('Bcat_0', 0)  # 100)
 Parameter('Btrcp_0', 1000)  # 30)
@@ -70,13 +70,13 @@ Initial(Tcf4(g=None, bcat=None), Tcf4_0)
 Initial(Smad3(g_gli2=None), Smad3_0)
 
 # Observables
+
+# GROUP 1 - destruction complex formation
 Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
 Observable('Gsk3_free', Gsk3(axin=None, lithium=None, dvl=None))
 Observable('Ck1a_free', Ck1a(axin=None))
 Observable('Apc_free', Apc(axin=None, aa15=None, aa20=None, state='u'))
 Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
-
-
 
 # Observable('Axin_tot', Axin())
 # Observable('Axin_Ck1a', Axin(ck1a=ANY))
@@ -115,13 +115,13 @@ Observable('Gli2_nuc', Gli2(loc='nuc'))
 Observable('Pthrp_tot', Pthrp())
 
 obs_to_plot = [
-    ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],
-    # ['Pthrp_tot']#,
+    ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],  # 'DestCpx', 'DestCpx_Bcat']  # ,
+    ['DestCpx', 'DestCpx_Bcat']  # ,
+    # ['Pthrp_tot']  # ,
     # ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
     # ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
     # ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
     # ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
-    ['DestCpx', 'DestCpx_Bcat']
 ]
 
 # Rate constants
@@ -141,7 +141,7 @@ Parameter('kr_axin_gsk3', 1e4)
 Parameter('kf_axin_apc', 1)
 Parameter('kr_axin_apc', 1e4)
 Parameter('kf_bcat_dtcpx', 1)  # 100)
-Parameter('kr_bcat_dtcpx', 100)  # 0.1)
+Parameter('kr_bcat_dtcpx', 1e6)  # 0.1)
 # Parameter('kf_bcat_apc', 100)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
 # Parameter('kr_bcat_apc', 0.1)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
 Parameter('k_bcat_phos_ck1a', 10)
@@ -576,7 +576,7 @@ create_wntmodel_rules(create=True)
 if __name__ == '__main__':
 
     # run simulation
-    tspan = np.linspace(0, 1000, 1001)  #(0, 5000, 5001)  # (0, 40, 101)
+    tspan = np.linspace(0, 5000, 5001)  # (0, 40, 101)
     sim = ScipyOdeSimulator(model, tspan, verbose=True)
 
     print('monomers %d' % len(model.monomers))
@@ -602,12 +602,15 @@ if __name__ == '__main__':
     # run simulation(WNT)
     # if wntmodel_rules:
     if True:
-        ncols = 2
+        ncols = 2 if len(obs_to_plot) > 1 else 1
         nrows = int(np.ceil(len(obs_to_plot) / ncols))
         fig, axs = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, constrained_layout=True,
-                                figsize=(6.4, 2.4*nrows))  # default: (6.4, 4.8)
+                                figsize=(6.4, 3.6*nrows))  # default: (6.4, 4.8)
+        if nrows == 1 and ncols == 1:
+            axs = np.array([axs])
         if len(axs.shape) == 1:
-            axs = axs.reshape(axs.shape[0], 1)
+            axs = axs.reshape(1, axs.shape[0])
+
         # run simulation
         traj = sim.run()
         # plot results
@@ -615,9 +618,10 @@ if __name__ == '__main__':
         col = 0
         for obs in obs_to_plot:
             print(obs)
+            print('row: %d, col: %d' % (row, col))
             for o in obs:
-                axs[col, row].plot(tspan, traj.observables[o], lw=2, label=o)
-            axs[col, row].legend(loc=0)
+                axs[row, col].plot(tspan, traj.observables[o], lw=2, label=o)
+            axs[row, col].legend(loc=0)
             if (col+1) % ncols == 0:
                 row += 1
                 col = 0
