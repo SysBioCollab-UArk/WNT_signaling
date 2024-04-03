@@ -76,7 +76,13 @@ Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
 Observable('Gsk3_free', Gsk3(axin=None, lithium=None, dvl=None))
 Observable('Ck1a_free', Ck1a(axin=None))
 Observable('Apc_free', Apc(axin=None, aa15=None, aa20=None, state='u'))
+# #####
 Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
+Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=1, apc=ANY) % Gsk3(axin=1, dvl=None))
+# ###
+Observable('Destcpx_Bcat_DVL', Gsk3(dvl=ANY))
+Observable('Bcat_free_unphos_cyt', Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt'))
+Observable('DVL_free', Dvl(rec=None, gsk3=None))
 
 # Observable('Axin_tot', Axin())
 # Observable('Axin_Ck1a', Axin(ck1a=ANY))
@@ -103,7 +109,6 @@ Observable('Bcat_ub_Apc_aa20', Bcat(top=1, state='ub') % Apc(aa20=1))
 Observable('Bcat_ub_free', Bcat(top=None, bottom=ANY, state='ub'))
 # Observable('Bcat_ub', Bcat(state='ub'))
 Observable('Bcat_tot', Bcat())
-Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('GSK3_activity', Bcat(nterm='p2') + Apc(state='p2'))
 # Observable('Btrcp_tot', Btrcp())
 # Observable('Li_total', Li())
@@ -114,16 +119,6 @@ Observable('Gli2_cyt', Gli2(loc='cyt'))
 Observable('Gli2_nuc', Gli2(loc='nuc'))
 Observable('Pthrp_tot', Pthrp())
 
-obs_to_plot = [
-    ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],  # 'DestCpx', 'DestCpx_Bcat']  # ,
-    ['DestCpx', 'DestCpx_Bcat']  # ,
-    # ['Pthrp_tot']  # ,
-    # ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
-    # ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
-    # ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
-    # ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
-]
-
 # Rate constants
 
 # common parameters
@@ -131,7 +126,7 @@ Parameter('kf_btrcp_binds_bcat', 0.01)
 Parameter('kr_btrcp_binds_bcat', 1)
 Parameter('k_bcat_ubiq', 1)  # 1
 Parameter('k_bcat_deg', 10)  # 0.1
-Parameter('k_bcat_synth', 0.1)  # since beta-catenin is degraded by the proteosome, we need to add a source term
+Parameter('k_bcat_synth', 0.02)  # since beta-catenin is degraded by the proteosome, we need to add a source term
 
 # destcpx parameters
 Parameter('kf_axin_ck1a', 1)
@@ -575,8 +570,19 @@ create_wntmodel_rules(create=True)
 
 if __name__ == '__main__':
 
+    obs_to_plot = [
+        ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],  # 'DestCpx', 'DestCpx_Bcat']  # ,
+        ['DestCpx', 'DestCpx_Bcat'],
+        ['Destcpx_Bcat_DVL', 'Bcat_free_unphos_cyt', 'DVL_free']
+        # ['Pthrp_tot']  # ,
+        # ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
+        # ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
+        # ['Bcat_x_Apc_aa20', 'Bcat_ub_Apc_aa20', 'Bcat_ub_free'],
+        # ['Apc_p2', 'Bcat_p2', 'GSK3_activity'],
+    ]
+
     # run simulation
-    tspan = np.linspace(0, 5000, 5001)  # (0, 40, 101)
+    tspan = np.linspace(0, 50000, 50001)  # (0, 40, 101) # (0, 5000, 5001)
     sim = ScipyOdeSimulator(model, tspan, verbose=True)
 
     print('monomers %d' % len(model.monomers))
@@ -627,6 +633,7 @@ if __name__ == '__main__':
                 col = 0
             else:
                 col += 1
+            axs[row, col].ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         # add shared axis labels
         fig.supxlabel('Time')
         fig.supylabel('Concentration')
