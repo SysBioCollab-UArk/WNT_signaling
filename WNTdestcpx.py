@@ -40,7 +40,7 @@ Parameter('Btrcp_0', 1000)  # 30)
 Parameter('Li_0', 0)
 
 Parameter('Rec_0', 100)
-Parameter('Dvl_0', 50)
+Parameter('Dvl_0', 0) # todo set this to 0 temporarily
 Parameter('Wnt_0', 50)  # 50 todo
 # Parameter('Dkk1_0', 100)
 # Parameter('Wif1_0', 0)
@@ -76,13 +76,17 @@ Observable('Axin_free', Axin(bcat=None, gsk3=None, ck1a=None, apc=None))
 Observable('Gsk3_free', Gsk3(axin=None, lithium=None, dvl=None))
 Observable('Ck1a_free', Ck1a(axin=None))
 Observable('Apc_free', Apc(axin=None, aa15=None, aa20=None, state='u'))
-# #####
+# GROUP 2 - destruction complex bound and unbound to Bcat
 Observable('DestCpx', Axin(bcat=None, ck1a=ANY, gsk3=ANY, apc=ANY))
 Observable('DestCpx_Bcat', Axin(bcat=ANY, ck1a=ANY, gsk3=1, apc=ANY) % Gsk3(axin=1, dvl=None))
-# ###
+# GROUP 3 - destruction complex bind to dishevelled and releasing free Bcat
 Observable('Destcpx_Bcat_DVL', Gsk3(dvl=ANY))
-Observable('Bcat_free_unphos_cyt', Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt'))
+Observable('Bcat_u_cyt_free', Bcat(top=None, bottom=None, tcf4=None, nterm='u', loc='cyt'))
 Observable('DVL_free', Dvl(rec=None, gsk3=None))
+# GROUP 4 - Bcat destruction by proteosome
+Observable('Bcat_dub_aa20', Bcat(top=1, state='x') % Apc(aa20=1))
+Observable('Bcat_ub_aa20', Bcat(top=1, state='ub') % Apc(aa20=1))
+Observable('Bcat_ub_free', Bcat(top=None, state='ub'))
 
 # Observable('Axin_tot', Axin())
 # Observable('Axin_Ck1a', Axin(ck1a=ANY))
@@ -106,7 +110,6 @@ Observable('Bcat_p2', Bcat(nterm='p2'))
 # Observable('Bcat_Apc_both', Apc(aa15=ANY, aa20=ANY))  # this should be zero
 Observable('Bcat_x_Apc_aa20', Bcat(top=1, state='x') % Apc(aa20=1))
 Observable('Bcat_ub_Apc_aa20', Bcat(top=1, state='ub') % Apc(aa20=1))
-Observable('Bcat_ub_free', Bcat(top=None, bottom=ANY, state='ub'))
 # Observable('Bcat_ub', Bcat(state='ub'))
 Observable('Bcat_tot', Bcat())
 Observable('GSK3_activity', Bcat(nterm='p2') + Apc(state='p2'))
@@ -136,7 +139,7 @@ Parameter('kr_axin_gsk3', 1e4)
 Parameter('kf_axin_apc', 1)
 Parameter('kr_axin_apc', 1e4)
 Parameter('kf_bcat_dtcpx', 1)  # 100)
-Parameter('kr_bcat_dtcpx', 1e6)  # 0.1)
+Parameter('kr_bcat_dtcpx', 1)  # 0.1)
 # Parameter('kf_bcat_apc', 100)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
 # Parameter('kr_bcat_apc', 0.1)  # This parameter isn't used anymore. Bcat binds Axin and Apc at the same time now.
 Parameter('k_bcat_phos_ck1a', 10)
@@ -573,7 +576,8 @@ if __name__ == '__main__':
     obs_to_plot = [
         ['Axin_free', 'Gsk3_free', 'Ck1a_free', 'Apc_free'],  # 'DestCpx', 'DestCpx_Bcat']  # ,
         ['DestCpx', 'DestCpx_Bcat'],
-        ['Destcpx_Bcat_DVL', 'Bcat_free_unphos_cyt', 'DVL_free']
+        ['Destcpx_Bcat_DVL', 'Bcat_u_cyt_free', 'DVL_free'],
+        ['Bcat_dub_aa20', 'Bcat_ub_aa20', 'Bcat_ub_free']
         # ['Pthrp_tot']  # ,
         # ['Gli2_tot', 'Gli2_cyt', 'Gli2_nuc'],
         # ['Bcat_tot', 'Bcat_cyt', 'Bcat_nuc'],  # 'Bcat_cyt_free'],
@@ -628,12 +632,12 @@ if __name__ == '__main__':
             for o in obs:
                 axs[row, col].plot(tspan, traj.observables[o], lw=2, label=o)
             axs[row, col].legend(loc=0)
+            axs[row, col].ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
             if (col+1) % ncols == 0:
                 row += 1
                 col = 0
             else:
                 col += 1
-            axs[row, col].ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
         # add shared axis labels
         fig.supxlabel('Time')
         fig.supylabel('Concentration')
